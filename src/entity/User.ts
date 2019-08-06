@@ -1,9 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, Unique } from "typeorm";
 import { Post } from "./Post";
 import { Comment } from "./Comment";
 import { Like } from "./Like";
 
-@Entity()
+@Entity("users")
+@Unique(["username"])
+@Unique(["email"])
 export class User {
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;

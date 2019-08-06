@@ -14,13 +14,13 @@ import { Comment } from "./Comment";
 import { Like } from "./Like";
 import { Tag } from "./Tag";
 
-@Entity()
+@Entity("posts")
 export class Post {
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;
 
     @Column({ length: 100 })
-    username: string;
+    title: string;
 
     @Column({ length: 300 })
     imgUrl: string;
@@ -34,13 +34,13 @@ export class Post {
     @UpdateDateColumn()
     updatedAt: string;
 
-    @ManyToOne(type => User, owner => owner.posts)
+    @ManyToOne(type => User, owner => owner.posts, { nullable: false, onDelete: "CASCADE" })
     owner: User;
 
-    @OneToMany(type => Comment, comm => comm.onPost)
+    @OneToMany(type => Comment, comm => comm.post)
     comments: Comment[];
 
-    @OneToMany(type => Like, like => like.onPost)
+    @OneToMany(type => Like, like => like.post)
     likes: Like[];
 
     @ManyToMany(type => Tag, tag => tag.posts)

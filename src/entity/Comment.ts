@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { User } from "./User";
 import { Post } from "./Post";
 
-@Entity()
+@Entity("comments")
 export class Comment {
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;
@@ -19,9 +19,9 @@ export class Comment {
     @UpdateDateColumn()
     updatedAt: string;
 
-    @ManyToOne(type => User, owner => owner.comments)
+    @ManyToOne(type => User, owner => owner.comments, { nullable: false, onDelete: "CASCADE" })
     owner: User;
 
-    @ManyToOne(type => Post, post => post.comments)
-    onPost: Post;
+    @ManyToOne(type => Post, post => post.comments, { nullable: false, onDelete: "CASCADE" })
+    post: Post;
 }
