@@ -17,4 +17,13 @@ export const userRegister = {
     country: Joi.string()
 };
 
+export const userLogin = {
+    email: Joi.string()
+        .email({ minDomainSegments: 2 })
+        .required(),
+    password: Joi.string()
+        .min(5)
+        .required()
+};
+
 export const none = {};
