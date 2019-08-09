@@ -25,7 +25,7 @@ export class Post {
     @Column({ length: 300 })
     imgUrl: string;
 
-    @Column()
+    @Column({ default: false })
     sensitive: boolean;
 
     @CreateDateColumn()
@@ -44,6 +44,6 @@ export class Post {
     likes: Like[];
 
     @ManyToMany(type => Tag, tag => tag.posts)
-    @JoinTable()
+    @JoinTable({ name: "posts_tags" })
     tags: Tag[];
 }

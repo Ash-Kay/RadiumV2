@@ -26,4 +26,35 @@ export const userLogin = {
         .required()
 };
 
+export const userUpdate = {
+    username: Joi.string()
+        .min(3)
+        .max(30)
+        .required(),
+    firstName: Joi.string(),
+    lastName: Joi.string(),
+    country: Joi.string()
+};
+
+export const createPost = {
+    title: Joi.string(),
+    sensitive: Joi.boolean(),
+    tags: Joi.array().items(
+        Joi.string()
+            .min(1)
+            .max(15)
+    )
+};
+
+export const createComment = {
+    message: Joi.string()
+        .min(1)
+        .required()
+    //tag_to: Joi.string().min(1)
+};
+
+export const postFile = {
+    //file: Joi.object().required()
+};
+
 export const none = {};

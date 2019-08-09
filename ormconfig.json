@@ -6,7 +6,7 @@
     "password": "ashish",
     "database": "testdb",
     "synchronize": true,
-    "logging": ["error"],
+    "logging": true,
     "entities": ["src/entity/**/*.ts"],
     "migrations": ["src/migration/**/*.ts"],
     "subscribers": ["src/subscriber/**/*.ts"],

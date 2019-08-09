@@ -12,16 +12,18 @@ export const all = async (request: Request, response: Response, next: NextFuncti
     response.send(alluser);
 };
 
+// *SignUp
 export const signup = async (request: Request, response: Response, next: NextFunction) => {
     const userRepository = getRepository(User);
     const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(request.body.password, salt);
     request.body.password = hashed;
 
-    const saved = await userRepository.save(request.body);
-    response.status(201).send(saved);
+    const user = await userRepository.save(request.body);
+    response.status(201).send(user);
 };
 
+// *Login
 export const login = async (request: Request, response: Response, next: NextFunction) => {
     const userRepository = getRepository(User);
     const user = await userRepository.findOneOrFail({ email: request.body.email });
@@ -40,8 +42,23 @@ export const login = async (request: Request, response: Response, next: NextFunc
     });
 };
 
+// *GetOne
 export const one = async (request: Request, response: Response, next: NextFunction) => {
     const userRepository = getRepository(User);
     const user = await userRepository.findOneOrFail(request.params.id);
     response.send(user);
+};
+
+// *Update
+export const update = async (request: Request, response: Response, next: NextFunction) => {
+    const userRepository = getRepository(User);
+    const user = await userRepository.update(request.user.id, request.body); //todo req.user.id
+    response.send(user);
+};
+
+// *AllPosts of a user
+export const posts = async (request: Request, response: Response, next: NextFunction) => {
+    const userRepository = getRepository(User);
+    const user = await userRepository.findOneOrFail(request.params.id, { relations: ["posts"] });
+    response.send(user.posts);
 };
