@@ -6,8 +6,7 @@ import * as bodyParser from "body-parser";
 import { config } from "dotenv";
 import userRouter from "./routes/user";
 import postRouter from "./routes/post";
-const morgan = require("morgan");
-import morgan from "morgan";
+import * as morgan from "morgan";
 import { error } from "./middleware/error";
 
 process.on("uncaughtException", e => {

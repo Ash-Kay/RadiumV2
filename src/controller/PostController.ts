@@ -59,17 +59,25 @@ export const remove = async (request: Request, response: Response, next: NextFun
 
 // *Like Post
 export const like = async (request: Request, response: Response, next: NextFunction) => {
-    await getConnection().manager.query(
-        `INSERT INTO likes (postId, ownerId) VALUES (${request.params.id}, ${request.user.id});`
-    );
+    const likeRepository = getRepository(Like);
+    const newLike = new Like();
+    newLike.owner = new User().id = request.user.id;
+    newLike.post = new Post().id = request.params.id;
+    await likeRepository.save(newLike);
     response.status(202).json({ code: "POST_LIKED" });
 };
 
 // *UnLike
 export const unlike = async (request: Request, response: Response, next: NextFunction) => {
-    await getConnection().manager.query(
+    /* await getConnection().manager.query(
         `DELETE from likes WHERE postId = ${request.params.id} AND ownerId = ${request.user.id};`
-    );
+    ); */
+    const likeRepository = getRepository(Like);
+    const newLike = new Like();
+    newLike.owner = new User().id = request.user.id;
+    newLike.post = new Post().id = request.params.id;
+    await likeRepository.remove(newLike);
+
     response.status(202).json({ code: "POST_UNLIKED" });
 };
 
@@ -81,5 +89,8 @@ export const comment = async (request: Request, response: Response, next: NextFu
         }", ${request.user.id}, ${request.params.id});`
     );
     console.log(comment);
+
+    //const comment = await getConnection().createQueryBuilder().relation(Co)
+
     response.status(201).json({ code: "COMM_POSTED" });
 };
