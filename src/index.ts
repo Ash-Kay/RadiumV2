@@ -1,11 +1,10 @@
-import "reflect-metadata";
 import "express-async-errors";
-import { createConnection } from "typeorm";
 import * as express from "express";
 import * as bodyParser from "body-parser";
 import { config } from "dotenv";
 import userRouter from "./routes/user";
 import postRouter from "./routes/post";
+import commRouter from "./routes/comments";
 import * as morgan from "morgan";
 import { error } from "./middleware/error";
 
@@ -26,14 +25,11 @@ app.use("/uploads", express.static("uploads"));
 config();
 const baseUrl = process.env.BASE_URL;
 
-createConnection()
-    .then(async connection => {
-        app.use(baseUrl + "/users", userRouter);
-        app.use(baseUrl + "/posts", postRouter);
-        app.use(error);
+app.use(baseUrl + "/users", userRouter);
+app.use(baseUrl + "/posts", postRouter);
+app.use(baseUrl + "/comments", commRouter);
+app.use(error);
 
-        app.listen(process.env.PORT || 3000, () => {
-            console.log(`\n\n\n\n\nSERVER STARTED ON PORT:${process.env.PORT || 3000}.\n`);
-        });
-    })
-    .catch(error => console.log(error));
+app.listen(process.env.PORT || 3000, () => {
+    console.log(`\n\n\n\n\nSERVER STARTED ON PORT:${process.env.PORT || 3000}.\n`);
+});

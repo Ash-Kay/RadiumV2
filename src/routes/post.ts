@@ -5,7 +5,6 @@ import * as schema from "../validator/schema";
 const router = Router();
 const multer = require("multer");
 import { verifyAuth } from "../middleware/auth";
-const fs = require("fs");
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
@@ -29,6 +28,6 @@ router.get("/:id", PostController.one);
 router.delete("/:id", verifyAuth, PostController.remove);
 router.post("/:id/like", verifyAuth, PostController.like);
 router.delete("/:id/unlike", verifyAuth, PostController.unlike);
-router.post("/:id/comment", verifyAuth, PostController.comment);
+router.post("/:id/comment", verifyAuth, upload.single("file"), validate(schema.createComment), PostController.comment);
 
 export default router;

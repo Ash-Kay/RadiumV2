@@ -1,50 +1,42 @@
-import { getRepository, getConnection } from "typeorm";
 import { NextFunction, Request, Response } from "express";
-import { Post } from "../entity/Post";
-import { User } from "../entity/User";
-import { Like } from "../entity/Like";
-import { Comment } from "../entity/Comment";
 import { config } from "dotenv";
 import * as fs from "fs";
+import { db } from "../database/db";
 config();
 
 // *Create
 export const create = async (request: Request, response: Response, next: NextFunction) => {
-    const postRepository = getRepository(Post);
-
-    const post = new Post();
-    post.title = request.body.title;
-    post.imgUrl = request.hostname + ":" + process.env.PORT + "/" + request.file.path;
-    post.sensitive = request.body.sensitive;
-
-    const owner = new User();
-    owner.id = request.user.id;
-    post.owner = owner;
-
-    const posted = await postRepository.save(post);
-    response.status(201).send(posted);
+    request.body.user_id = request.user.id;
+    request.body.file_path = request.hostname + ":" + process.env.PORT + "/" + request.file.path;
+    await db("posts").insert(request.body); // return id
+    response.status(201).json({ code: "POST_CREATED" });
 };
 
 // *Get Post
 export const one = async (request: Request, response: Response, next: NextFunction) => {
-    const postRepository = getRepository(Post);
-    const post = await postRepository.findOneOrFail(request.params.id);
+    const post = await db("posts")
+        .select()
+        .where({ id: request.params.id })
+        .first();
     response.send(post);
 };
 
 // *Delete Post
 export const remove = async (request: Request, response: Response, next: NextFunction) => {
-    const postRepository = getRepository(Post);
-    const post = await postRepository.findOneOrFail(request.params.id, { relations: ["owner"] });
+    const post = await db("posts")
+        .select()
+        .where({ id: request.params.id })
+        .first();
 
-    if (post.owner.id !== request.user.id) {
+    if (post === undefined || post.user_id !== request.user.id) {
         return response.status(401).json({ code: "AUTH_ERROR" });
     }
 
-    console.log("post deleted form db : ", post.imgUrl);
-    const deleted = await postRepository.delete(request.params.id);
+    await db("posts")
+        .where({ id: request.params.id })
+        .del();
 
-    const fsPath = post.imgUrl.split("/")[1];
+    const fsPath = post.file_path.split("/")[1];
 
     fs.unlink(fsPath, err => {
         if (err) {
@@ -59,38 +51,23 @@ export const remove = async (request: Request, response: Response, next: NextFun
 
 // *Like Post
 export const like = async (request: Request, response: Response, next: NextFunction) => {
-    const likeRepository = getRepository(Like);
-    const newLike = new Like();
-    newLike.owner = new User().id = request.user.id;
-    newLike.post = new Post().id = request.params.id;
-    await likeRepository.save(newLike);
+    await db("likes").insert({ post_id: request.params.id, user_id: request.user.id });
     response.status(202).json({ code: "POST_LIKED" });
 };
 
 // *UnLike
 export const unlike = async (request: Request, response: Response, next: NextFunction) => {
-    /* await getConnection().manager.query(
-        `DELETE from likes WHERE postId = ${request.params.id} AND ownerId = ${request.user.id};`
-    ); */
-    const likeRepository = getRepository(Like);
-    const newLike = new Like();
-    newLike.owner = new User().id = request.user.id;
-    newLike.post = new Post().id = request.params.id;
-    await likeRepository.remove(newLike);
-
+    await db("likes")
+        .where({ post_id: request.params.id, user_id: request.user.id })
+        .del();
     response.status(202).json({ code: "POST_UNLIKED" });
 };
 
 // *Comment
 export const comment = async (request: Request, response: Response, next: NextFunction) => {
-    const comment = await getConnection().manager.query(
-        `INSERT INTO comments (message, imgUrl, ownerId, postId) VALUES ("${request.body.message}", "${
-            request.body.imgUrl
-        }", ${request.user.id}, ${request.params.id});`
-    );
-    console.log(comment);
-
-    //const comment = await getConnection().createQueryBuilder().relation(Co)
+    request.body.post_id = request.params.id;
+    request.body.user_id = request.user.id;
+    await db("comments").insert(request.body);
 
     response.status(201).json({ code: "COMM_POSTED" });
 };

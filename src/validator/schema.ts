@@ -11,8 +11,8 @@ export const userRegister = {
     password: Joi.string()
         .min(5)
         .required(),
-    firstName: Joi.string(),
-    lastName: Joi.string(),
+    first_name: Joi.string(),
+    last_name: Joi.string(),
     dob: Joi.date(),
     country: Joi.string()
 };
@@ -31,8 +31,8 @@ export const userUpdate = {
         .min(3)
         .max(30)
         .required(),
-    firstName: Joi.string(),
-    lastName: Joi.string(),
+    first_name: Joi.string(),
+    last_name: Joi.string(),
     country: Joi.string()
 };
 
@@ -49,8 +49,8 @@ export const createPost = {
 export const createComment = {
     message: Joi.string()
         .min(1)
-        .required()
-    //tag_to: Joi.string().min(1)
+        .required(),
+    tag_to: Joi.string().min(1)
 };
 
 export const postFile = {
