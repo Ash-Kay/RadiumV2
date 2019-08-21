@@ -7,6 +7,7 @@ import postRouter from "./routes/post";
 import commRouter from "./routes/comments";
 import * as morgan from "morgan";
 import { error } from "./middleware/error";
+import * as cors from "cors";
 
 process.on("uncaughtException", e => {
     console.log(e);
@@ -18,6 +19,7 @@ process.on("unhandledRejection", e => {
 });
 
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan("dev"));
