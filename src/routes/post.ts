@@ -24,6 +24,7 @@ const upload = multer({
 });
 
 router.post("/", verifyAuth, upload.single("file"), validate(schema.createPost), PostController.create);
+router.get("/", PostController.feed);
 router.get("/:id", PostController.one);
 router.delete("/:id", verifyAuth, PostController.remove);
 router.post("/:id/like", verifyAuth, PostController.like);

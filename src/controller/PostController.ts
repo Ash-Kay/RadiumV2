@@ -7,9 +7,18 @@ config();
 // *Create
 export const create = async (request: Request, response: Response, next: NextFunction) => {
     request.body.user_id = request.user.id;
+    request.file.path = request.file.path.replace("\\", "/");
     request.body.file_path = request.hostname + ":" + process.env.PORT + "/" + request.file.path;
     await db("posts").insert(request.body); // return id
     response.status(201).json({ code: "POST_CREATED" });
+};
+
+// *PostFeed
+export const feed = async (request: Request, response: Response, next: NextFunction) => {
+    const posts = await db("posts")
+        .select()
+        .orderBy("created_at", "desc");
+    response.status(200).json(posts);
 };
 
 // *Get Post
