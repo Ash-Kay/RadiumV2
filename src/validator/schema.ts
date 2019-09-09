@@ -53,8 +53,14 @@ export const createComment = {
     tag_to: Joi.string().min(1)
 };
 
-export const postFile = {
-    //file: Joi.object().required()
+export const createFact = {
+    img_credit: Joi.string(),
+    adult: Joi.boolean(),
+    tags: Joi.array().items(
+        Joi.string()
+            .min(1)
+            .max(15)
+    )
 };
 
 export const none = {};

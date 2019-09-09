@@ -6,6 +6,9 @@ config();
 
 // *Create
 export const create = async (request: Request, response: Response, next: NextFunction) => {
+    if (!request.file) {
+        return response.status(400).json({ code: "FILE_REQUIRED" });
+    }
     request.body.user_id = request.user.id;
     request.file.path = request.file.path.replace("\\", "/");
     request.body.file_path = request.hostname + ":" + process.env.PORT + "/" + request.file.path;

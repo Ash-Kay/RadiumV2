@@ -28,7 +28,9 @@ export const login = async (request: Request, response: Response, next: NextFunc
 
     const isValid = await bcrypt.compare(request.body.password, user.password);
     if (isValid) {
-        var token = jwt.sign({ email: user.email, id: user.id }, process.env.JWT_KEY, { expiresIn: "1d" });
+        var token = jwt.sign({ email: user.email, id: user.id, type: user.user_type }, process.env.JWT_KEY, {
+            expiresIn: "1d"
+        });
     } else {
         console.log("Password Does't match");
         response.status(400).json({ code: "AUTH_FAILED" });

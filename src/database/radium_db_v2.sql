@@ -19,6 +19,7 @@ CREATE TABLE `users` (
     `last_online` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     `dob` DATE,
     `country` VARCHAR(30) NULL,
+    `user_type` varchar(10) NOT NULL DEFAULT 'normal',
     PRIMARY KEY (`id`)
 );
 
@@ -78,4 +79,17 @@ CREATE TABLE `post_tag` (
         REFERENCES `posts` (`id`),
     FOREIGN KEY (`tag_id`)
         REFERENCES `tags` (`id`)
+);
+
+CREATE TABLE `facts` (
+    `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `img_credit` VARCHAR(50),
+    `file_path` VARCHAR(100) NOT NULL,
+    `adult` BOOLEAN DEFAULT 0,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL,
+    `user_id` INT(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`user_id`)
+        REFERENCES `users` (`id`)
 );

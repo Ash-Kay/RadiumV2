@@ -12,3 +12,15 @@ export const verifyAuth = (req, res, next) => {
         return res.status(401).json({ message: "AUTH_FAILED" });
     }
 };
+
+export const verifyAuthorization = (req, res, next) => {
+    try {
+        if (req.user.type !== "god") {
+            return res.status(401).json({ message: "AUTH_FAILED" });
+        }
+        next();
+    } catch (e) {
+        console.log("jwt token invalid");
+        return res.status(401).json({ message: "AUTH_FAILED" });
+    }
+};
