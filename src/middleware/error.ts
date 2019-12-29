@@ -1,8 +1,7 @@
-export const error = (error, req, res, next) => {
-    console.log("ERROR: ", error);
+import logger from "../utils/logger";
+import HttpStatusCode from "../utils/error.enum";
 
-    res.status(500).json({
-        code: "ERROR",
-        error: error
-    });
+export const error = (error, req, res, next) => {
+    logger.error(error.message, error.stack);
+    res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).end();
 };

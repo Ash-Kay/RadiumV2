@@ -1,5 +1,5 @@
 import { Router } from "express";
-import * as UserController from "../controller/UserController";
+import * as UserController from "../controller/user.controller";
 import { validate } from "../validator/validator";
 import * as schema from "../validator/schema";
 import { verifyAuth } from "../middleware/auth";

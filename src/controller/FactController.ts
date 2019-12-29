@@ -15,7 +15,7 @@ export const create = async (request: Request, response: Response, next: NextFun
         return response.status(400).json({ code: "FILE_REQUIRED" });
     }
     request.body.user_id = request.user.id;
-    request.file.path = request.file.path.replace("\\", "/");
+    request.file.path = request.file.path.replace(/\\/g, "/");
     request.body.file_path = request.hostname + ":" + process.env.PORT + "/" + request.file.path;
     await db("facts").insert(request.body); // return id
     response.status(201).json({ code: "FACT_CREATED" });

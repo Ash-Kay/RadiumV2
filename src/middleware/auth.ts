@@ -1,4 +1,5 @@
 import * as jwt from "jsonwebtoken";
+import logger from "../utils/logger";
 
 export const verifyAuth = (req, res, next) => {
     try {
@@ -8,19 +9,20 @@ export const verifyAuth = (req, res, next) => {
         req.user = user;
         next();
     } catch (e) {
-        console.log("jwt token invalid");
-        return res.status(401).json({ message: "AUTH_FAILED" });
+        logger.error("JWT token INVALID");
+        return res.status(401).end();
     }
 };
 
 export const verifyAuthorization = (req, res, next) => {
     try {
         if (req.user.type !== "god") {
-            return res.status(401).json({ message: "AUTH_FAILED" });
+            logger.error("Not Authorized");
+            return res.status(401).end();
         }
         next();
     } catch (e) {
-        console.log("jwt token invalid");
-        return res.status(401).json({ message: "AUTH_FAILED" });
+        logger.error("JWT token INVALID");
+        return res.status(401).end();
     }
 };

@@ -1,11 +1,11 @@
-import chalk from "chalk";
+import logger from "../utils/logger";
 
 export const uncaughtException = process.on("uncaughtException", e => {
-    console.log(chalk.bgRgb(150, 0, 0)(e.stack));
+    logger.error(e.message, e.stack);
     process.exit(1);
 });
 
 export const unhandledRejection = process.on("unhandledRejection", e => {
-    console.log(chalk.bgRgb(150, 0, 0)(e.stack));
+    logger.error(e);
     process.exit(1);
 });

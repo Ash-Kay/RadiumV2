@@ -3,6 +3,10 @@ import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 import { config } from "dotenv";
 import { db } from "../database/db";
+import HttpStatusCode from "../utils/error.enum";
+import logger from "../utils/logger";
+import * as _ from "lodash";
+import User from "../models/user.model";
 config();
 
 export const all = async (request: Request, response: Response, next: NextFunction) => {
@@ -16,47 +20,50 @@ export const signup = async (request: Request, response: Response, next: NextFun
     const hashed = await bcrypt.hash(request.body.password, salt);
     request.body.password = hashed;
 
-    const user = await db("users").insert(request.body);
+    const user: User = await db("users").insert(request.body);
+    logger.info(`${request.user.email} REGISTERED`, user);
     response.status(201).send(user);
 };
 
 // *Login
 export const login = async (request: Request, response: Response, next: NextFunction) => {
-    const user = await db("users")
+    const user: User = await db("users")
         .where({ email: request.body.email })
         .first();
 
     const isValid = await bcrypt.compare(request.body.password, user.password);
     if (isValid) {
         var token = jwt.sign({ email: user.email, id: user.id, type: user.user_type }, process.env.JWT_KEY, {
-            expiresIn: "1d"
+            expiresIn: "7d"
         });
     } else {
-        console.log("Password Does't match");
-        response.status(400).json({ code: "AUTH_FAILED" });
+        logger.info(`AUTH FAILED: ${request.user.email}'s password does't match`);
+        response.status(HttpStatusCode.BAD_REQUEST).end();
     }
 
-    response.status(200).json({
-        code: "AUTH_SUCESS",
-        token: token
-    });
+    logger.info(`${request.body.email}' LOGGED in`);
+    response.status(HttpStatusCode.OK).send(token);
 };
 
 // *GetOne
 export const one = async (request: Request, response: Response, next: NextFunction) => {
-    const user = await db("users")
+    const user: User = await db("users")
         .select()
         .where({ id: request.params.id })
         .first();
-    response.send(user);
+
+    const filterUser = _.pick(user, ["id", "username", "img_url", "last_online", "country"]);
+    logger.info(`${request.params.id}' fetched`, filterUser);
+    response.send(filterUser);
 };
 
-// *Update
+// *Update the logged in user
 export const update = async (request: Request, response: Response, next: NextFunction) => {
     await db("users")
         .where({ id: request.user.id })
-        .update(request.body); // returns id(Maybe)
-    response.status(202).json({ code: "USER_UPDATED" });
+        .update(request.body);
+    logger.info(`${request.user.email}' UPDATED`);
+    response.status(HttpStatusCode.ACCEPTED).end();
 };
 
 // *AllPosts of a user
@@ -65,5 +72,6 @@ export const posts = async (request: Request, response: Response, next: NextFunc
         .select()
         .from("posts")
         .where({ user_id: request.params.id });
-    response.status(200).send(post);
+    logger.info(`${request.params.id}'s ALL post fetched`);
+    response.status(HttpStatusCode.OK).send(post);
 };
