@@ -15,26 +15,52 @@ export const create = async (request: Request, response: Response, next: NextFun
     request.body.user_id = request.user.id;
     request.file.path = request.file.path.replace(/\\/g, "/");
     request.body.file_path = request.file.path;
-    await db("posts").insert(request.body); // return id
-    logger.info(`${request.body.user_id} CREATED post with id ${NaN}`, request.body);
-    response.status(HttpStatusCode.CREATED).end();
+    const id: number = await db("posts").insert(request.body);
+
+    logger.info(`${request.body.user_id} CREATED post with id ${id}`, request.body);
+    response.status(HttpStatusCode.CREATED).send(id);
 };
 
 // *GetFeed
 export const feed = async (request: Request, response: Response, next: NextFunction) => {
-    const posts: Post[] = await db("posts")
-        .select()
+    const posts: Post[] = await db
+        .select(
+            "posts.id",
+            "posts.user_id",
+            "posts.title",
+            "posts.file_path",
+            "posts.adult",
+            "posts.updated_at",
+            "posts.created_at",
+            "users.username",
+            "users.img_url as user_avatar"
+        )
+        .from("posts")
+        .leftJoin("users", "users.id", "posts.user_id")
         .orderBy("created_at", "desc");
+
     logger.info("Feed Fetched");
     response.status(HttpStatusCode.OK).send(posts);
 };
 
 // *Get Post
 export const one = async (request: Request, response: Response, next: NextFunction) => {
-    const post: Post = await db("posts")
-        .select()
-        .where({ id: request.params.id })
-        .first();
+    const [post]: Post[] = await db
+        .select(
+            "posts.id",
+            "posts.user_id",
+            "posts.title",
+            "posts.file_path",
+            "posts.adult",
+            "posts.updated_at",
+            "posts.created_at",
+            "users.username",
+            "users.img_url as user_avatar"
+        )
+        .from("posts")
+        .leftJoin("users", "users.id", "posts.user_id")
+        .where({ "posts.id": request.params.id });
+
     if (post === undefined) {
         logger.info("Post NOT found");
         response.status(HttpStatusCode.NOT_FOUND).end();
@@ -77,6 +103,7 @@ export const remove = async (request: Request, response: Response, next: NextFun
 // *Like Post
 export const like = async (request: Request, response: Response, next: NextFunction) => {
     await db("likes").insert({ post_id: request.params.id, user_id: request.user.id });
+
     logger.info(`${request.user.id} LIKED post: ${request.params.id}`);
     response.status(HttpStatusCode.ACCEPTED).end();
 };
@@ -86,6 +113,7 @@ export const unlike = async (request: Request, response: Response, next: NextFun
     await db("likes")
         .where({ post_id: request.params.id, user_id: request.user.id })
         .del();
+
     logger.info(`${request.user.id} UNLIKED post: ${request.params.id}`);
     response.status(HttpStatusCode.ACCEPTED).end();
 };
@@ -94,14 +122,16 @@ export const unlike = async (request: Request, response: Response, next: NextFun
 export const comment = async (request: Request, response: Response, next: NextFunction) => {
     request.body.post_id = request.params.id;
     request.body.user_id = request.user.id;
-    await db("comments").insert(request.body);
-    logger.info(`${request.user.id} COMMENTED on ${request.params.id}`);
-    response.status(HttpStatusCode.CREATED).end();
+    const id: number = await db("comments").insert(request.body);
+
+    logger.info(`${request.user.id} COMMENTED on ${request.params.id}, commId: ${id}`, request.body);
+    response.status(HttpStatusCode.CREATED).send(id);
 };
 
 // *All Comment on a post
 export const getAllComm = async (request: Request, response: Response, next: NextFunction) => {
     const comms = await db("comments").where({ post_id: request.params.id });
+
     logger.info(`All comment on postID: ${request.params.id}`);
     response.status(HttpStatusCode.OK).send(comms);
 };
