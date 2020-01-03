@@ -21,7 +21,7 @@ export const signup = async (request: Request, response: Response, next: NextFun
     request.body.password = hashed;
 
     const user: User = await db("users").insert(request.body);
-    logger.info(`${request.user.email} REGISTERED`, user);
+    logger.info(`${request.body.email} REGISTERED`, user);
     response.status(201).send(user);
 };
 
@@ -33,9 +33,13 @@ export const login = async (request: Request, response: Response, next: NextFunc
 
     const isValid = await bcrypt.compare(request.body.password, user.password);
     if (isValid) {
-        var token = jwt.sign({ email: user.email, id: user.id, type: user.user_type }, process.env.JWT_KEY, {
-            expiresIn: "7d"
-        });
+        var token = jwt.sign(
+            { email: user.email, id: user.id, type: user.user_type, username: user.username },
+            process.env.JWT_KEY,
+            {
+                expiresIn: "7d"
+            }
+        );
     } else {
         logger.info(`AUTH FAILED: ${request.user.email}'s password does't match`);
         response.status(HttpStatusCode.BAD_REQUEST).end();
