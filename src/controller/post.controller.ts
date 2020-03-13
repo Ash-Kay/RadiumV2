@@ -4,6 +4,7 @@ import * as fs from "fs";
 import { db } from "../database/db";
 import HttpStatusCode from "../utils/error.enum";
 import logger from "../utils/logger";
+import * as _ from "lodash";
 import Post from "../models/post.model";
 config();
 
@@ -12,10 +13,20 @@ export const create = async (request: Request, response: Response, next: NextFun
     if (!request.file) {
         return response.status(HttpStatusCode.BAD_REQUEST).end();
     }
-    request.body.user_id = request.user.id;
-    request.file.path = request.file.path.replace(/\\/g, "/");
-    request.body.file_path = request.file.path;
-    const id: number = await db("posts").insert(request.body);
+    const filterPost = _.pick(request.body, ["title", "adult"]);
+    _.assign(filterPost, { user_id: request.user.id }, { file_path: request.file.path.replace(/\\/g, "/") });
+
+    const id: number = await db("posts").insert(filterPost);
+
+    const tags = request.body.tags.map(tag => ({ tag_name: tag }));
+    const tag0Id = await db("tags").insert(tags);
+
+    const post_tag = [];
+    for (let i = tag0Id[0]; i < request.body.tags.length + tag0Id[0]; i++) {
+        post_tag.push({ post_id: id[0], tag_id: i });
+    }
+
+    const post_tag0Id: number[] = await db("post_tag").insert(post_tag);
 
     logger.info(`${request.body.user_id} CREATED post with id ${id}`, request.body);
     response.status(HttpStatusCode.CREATED).send(id);

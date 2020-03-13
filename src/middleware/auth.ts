@@ -11,6 +11,7 @@ export const verifyAuth = (req, res, next) => {
         next();
     } catch (e) {
         logger.error("JWT token INVALID");
+        logger.warn("JWT token " + req.headers.authorization.split(" ")[1]);
         return res.status(HttpStatusCode.UNAUTHORIZED).end();
     }
 };
