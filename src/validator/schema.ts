@@ -38,7 +38,7 @@ export const userUpdate = {
 
 export const createPost = {
     title: Joi.string(),
-    adult: Joi.boolean(),
+    sensitive: Joi.boolean(),
     tags: Joi.array().items(
         Joi.string()
             .min(1)

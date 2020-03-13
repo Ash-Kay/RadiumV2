@@ -7,6 +7,8 @@ import HttpStatusCode from "../utils/error.enum";
 import logger from "../utils/logger";
 import * as _ from "lodash";
 import User from "../models/user.model";
+import { getRepository } from "typeorm";
+import { User as User2 } from "../entity/user.entity";
 config();
 
 export const all = async (request: Request, response: Response, next: NextFunction) => {
@@ -20,9 +22,16 @@ export const signup = async (request: Request, response: Response, next: NextFun
     const hashed = await bcrypt.hash(request.body.password, salt);
     request.body.password = hashed;
 
-    const user: User = await db("users").insert(request.body);
-    logger.info(`${request.body.email} REGISTERED`, user);
-    response.status(201).send(user);
+    const userRepository = getRepository(User2);
+    try {
+        const user = await userRepository.save(request.body);
+        logger.info(`${request.body.email} REGISTERED`, user);
+        response.status(HttpStatusCode.CREATED).send(user);
+    } catch (err) {
+        logger.error(`${request.body.email} error`, err);
+        response.status(HttpStatusCode.BAD_REQUEST).end();
+    }
+    // const user: User = await db("users").insert(request.body);
 };
 
 // *Login

@@ -6,6 +6,10 @@ import HttpStatusCode from "../utils/error.enum";
 import logger from "../utils/logger";
 import * as _ from "lodash";
 import Post from "../models/post.model";
+import { Post as Post2 } from "../entity/post.entity";
+import { User } from "../entity/user.entity";
+import { Tag } from "../entity/tag.entity";
+import { getRepository } from "typeorm";
 config();
 
 // *Create
@@ -13,7 +17,7 @@ export const create = async (request: Request, response: Response, next: NextFun
     if (!request.file) {
         return response.status(HttpStatusCode.BAD_REQUEST).end();
     }
-    const filterPost = _.pick(request.body, ["title", "adult"]);
+    /* const filterPost = _.pick(request.body, ["title", "adult"]);
     _.assign(filterPost, { user_id: request.user.id }, { file_path: request.file.path.replace(/\\/g, "/") });
 
     const id: number = await db("posts").insert(filterPost);
@@ -26,10 +30,45 @@ export const create = async (request: Request, response: Response, next: NextFun
         post_tag.push({ post_id: id[0], tag_id: i });
     }
 
-    const post_tag0Id: number[] = await db("post_tag").insert(post_tag);
+    const post_tag0Id: number[] = await db("post_tag").insert(post_tag); */
 
-    logger.info(`${request.body.user_id} CREATED post with id ${id}`, request.body);
-    response.status(HttpStatusCode.CREATED).send(id);
+    const postRepository = getRepository(Post2);
+    const post = new Post2();
+    post.title = request.body.title;
+    post.sensitive = request.body.sensitive;
+    post.file_path = request.file.path.replace(/\\/g, "/");
+
+    const tagRepository = getRepository(Tag);
+    const tags: Tag[] = [];
+
+    request.body.tags.map(async tag => {
+        /* const count = await tagRepository
+            .createQueryBuilder()
+            .where({ tag_text: tag })
+            .getOne();
+
+        console.log("count", count);
+
+        if (count === undefined) { */
+        const tempTag = new Tag();
+        tempTag.tag_text = tag;
+        tags.push(tempTag);
+        // }
+    });
+    post.tags = tags;
+
+    console.log("tags", tags);
+
+    const user = new User();
+    user.id = request.user.id;
+    post.user = user;
+
+    console.log("post", post);
+
+    const result = await postRepository.save(post);
+
+    logger.info(`${post.user.id} CREATED post with id ${post.id}`, result);
+    response.status(HttpStatusCode.CREATED).send({ id: post.id });
 };
 
 // *GetFeed
