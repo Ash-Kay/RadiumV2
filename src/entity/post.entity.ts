@@ -7,7 +7,7 @@ import {
     ManyToOne,
     OneToMany,
     ManyToMany,
-    JoinTable
+    JoinTable,
 } from "typeorm";
 import { User } from "./user.entity";
 import { Comment } from "./comment.entity";
@@ -35,32 +35,18 @@ export class Post {
     @UpdateDateColumn({ type: "timestamp" })
     updated_at: Date;
 
-    @ManyToOne(
-        type => User,
-        user => user.posts,
-        { nullable: false, onDelete: "CASCADE" }
-    )
+    @ManyToOne((type) => User, (user) => user.posts, { nullable: false, onDelete: "CASCADE" })
     user: User;
 
-    @OneToMany(
-        type => Comment,
-        comment => comment.post
-    )
+    @OneToMany((type) => Comment, (comment) => comment.post)
     comments: Comment[];
 
-    @OneToMany(
-        type => Like,
-        like => like.post
-    )
+    @OneToMany((type) => Like, (like) => like.post)
     likes: Like[];
 
-    @ManyToMany(
-        type => Tag,
-        tags => tags.posts,
-        {
-            cascade: ["insert", "update"]
-        }
-    )
+    @ManyToMany((type) => Tag, (tags) => tags.posts, {
+        cascade: ["insert", "update"],
+    })
     @JoinTable({ name: "post_tag" })
     tags: Tag[];
 }

@@ -4,6 +4,8 @@ import { Post } from "./post.entity";
 @Entity("tags")
 @Unique(["tag_text"])
 export class Tag {
+    constructor() {}
+
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;
 
@@ -13,10 +15,6 @@ export class Tag {
     @CreateDateColumn({ type: "timestamp" })
     created_at: Date;
 
-    @ManyToMany(
-        type => Post,
-        post => post.tags,
-        { nullable: false, cascade: true }
-    )
+    @ManyToMany((type) => Post, (post) => post.tags, { nullable: false, cascade: true })
     posts: Post[];
 }

@@ -9,7 +9,11 @@ import Post from "../models/post.model";
 import { Post as Post2 } from "../entity/post.entity";
 import { User } from "../entity/user.entity";
 import { Tag } from "../entity/tag.entity";
-import { getRepository } from "typeorm";
+import { getRepository, getConnection } from "typeorm";
+
+//service
+import { PostService } from "../service/post.service";
+import { TagService } from "../service/tag.service";
 config();
 
 // *Create
@@ -17,57 +21,35 @@ export const create = async (request: Request, response: Response, next: NextFun
     if (!request.file) {
         return response.status(HttpStatusCode.BAD_REQUEST).end();
     }
-    /* const filterPost = _.pick(request.body, ["title", "adult"]);
-    _.assign(filterPost, { user_id: request.user.id }, { file_path: request.file.path.replace(/\\/g, "/") });
 
-    const id: number = await db("posts").insert(filterPost);
+    const postService = new PostService();
+    const tagService = new TagService();
 
-    const tags = request.body.tags.map(tag => ({ tag_name: tag }));
-    const tag0Id = await db("tags").insert(tags);
-
-    const post_tag = [];
-    for (let i = tag0Id[0]; i < request.body.tags.length + tag0Id[0]; i++) {
-        post_tag.push({ post_id: id[0], tag_id: i });
-    }
-
-    const post_tag0Id: number[] = await db("post_tag").insert(post_tag); */
-
-    const postRepository = getRepository(Post2);
-    const post = new Post2();
+    let post = new Post2();
     post.title = request.body.title;
     post.sensitive = request.body.sensitive;
     post.file_path = request.file.path.replace(/\\/g, "/");
-
-    const tagRepository = getRepository(Tag);
-    const tags: Tag[] = [];
-
-    request.body.tags.map(async tag => {
-        /* const count = await tagRepository
-            .createQueryBuilder()
-            .where({ tag_text: tag })
-            .getOne();
-
-        console.log("count", count);
-
-        if (count === undefined) { */
-        const tempTag = new Tag();
-        tempTag.tag_text = tag;
-        tags.push(tempTag);
-        // }
-    });
-    post.tags = tags;
-
-    console.log("tags", tags);
 
     const user = new User();
     user.id = request.user.id;
     post.user = user;
 
-    console.log("post", post);
+    post = await postService.insert(post);
 
-    const result = await postRepository.save(post);
+    request.body.tags.forEach(async (tagText) => {
+        const tag: Tag = await tagService.getByText(tagText);
+        console.log("tag", tag);
+        if (tag) {
+            tagService.linkPost(tag, post);
+        } else {
+            const tag = new Tag();
+            tag.tag_text = tagText;
+            tag.posts = [post];
+            tagService.insert(tag);
+        }
+    });
 
-    logger.info(`${post.user.id} CREATED post with id ${post.id}`, result);
+    logger.info(`${post.user.id} CREATED post with id ${post.id}`, post);
     response.status(HttpStatusCode.CREATED).send({ id: post.id });
 };
 
@@ -122,10 +104,7 @@ export const one = async (request: Request, response: Response, next: NextFuncti
 
 // *Delete Post
 export const remove = async (request: Request, response: Response, next: NextFunction) => {
-    const post: Post = await db("posts")
-        .select()
-        .where({ id: request.params.id })
-        .first();
+    const post: Post = await db("posts").select().where({ id: request.params.id }).first();
 
     if (post === undefined) {
         logger.info("Post NOT found");
@@ -135,11 +114,9 @@ export const remove = async (request: Request, response: Response, next: NextFun
         return response.status(HttpStatusCode.UNAUTHORIZED).end();
     }
 
-    await db("posts")
-        .where({ id: request.params.id })
-        .del(); //return boolean 0 not deleted 1 deleted
+    await db("posts").where({ id: request.params.id }).del(); //return boolean 0 not deleted 1 deleted
 
-    fs.unlink(post.file_path, err => {
+    fs.unlink(post.file_path, (err) => {
         if (err) {
             logger.error("File CANT be DELETED from fs", err);
             response.status(HttpStatusCode.INTERNAL_SERVER_ERROR).end();
@@ -160,9 +137,7 @@ export const like = async (request: Request, response: Response, next: NextFunct
 
 // *UnLike
 export const unlike = async (request: Request, response: Response, next: NextFunction) => {
-    await db("likes")
-        .where({ post_id: request.params.id, user_id: request.user.id })
-        .del();
+    await db("likes").where({ post_id: request.params.id, user_id: request.user.id }).del();
 
     logger.info(`${request.user.id} UNLIKED post: ${request.params.id}`);
     response.status(HttpStatusCode.ACCEPTED).end();
