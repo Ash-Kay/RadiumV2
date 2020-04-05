@@ -5,13 +5,14 @@ import { db } from "../database/db";
 import HttpStatusCode from "../utils/error.enum";
 import logger from "../utils/logger";
 import * as _ from "lodash";
+
+// Import Entities
 import Post from "../models/post.model";
 import { Post as Post2 } from "../entity/post.entity";
 import { User } from "../entity/user.entity";
 import { Tag } from "../entity/tag.entity";
-import { getRepository, getConnection } from "typeorm";
 
-//service
+// Import Services
 import { PostService } from "../service/post.service";
 import { TagService } from "../service/tag.service";
 config();
@@ -38,7 +39,6 @@ export const create = async (request: Request, response: Response, next: NextFun
 
     request.body.tags.forEach(async (tagText) => {
         const tag: Tag = await tagService.getByText(tagText);
-        console.log("tag", tag);
         if (tag) {
             tagService.linkPost(tag, post);
         } else {
@@ -49,13 +49,12 @@ export const create = async (request: Request, response: Response, next: NextFun
         }
     });
 
-    logger.info(`${post.user.id} CREATED post with id ${post.id}`, post);
-    response.status(HttpStatusCode.CREATED).send({ id: post.id });
+    response.status(HttpStatusCode.CREATED).json({ id: post.id });
 };
 
 // *GetFeed
 export const feed = async (request: Request, response: Response, next: NextFunction) => {
-    const posts: Post[] = await db
+    /* const posts: Post[] = await db
         .select(
             "posts.id",
             "posts.user_id",
@@ -69,10 +68,12 @@ export const feed = async (request: Request, response: Response, next: NextFunct
         )
         .from("posts")
         .leftJoin("users", "users.id", "posts.user_id")
-        .orderBy("created_at", "desc");
+        .orderBy("created_at", "desc"); */
 
-    logger.info("Feed Fetched");
-    response.status(HttpStatusCode.OK).send(posts);
+    const postService = new PostService();
+    const posts = postService.getFeed();
+
+    response.status(HttpStatusCode.OK).json(posts);
 };
 
 // *Get Post
