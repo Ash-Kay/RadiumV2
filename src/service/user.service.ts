@@ -20,7 +20,7 @@ export class UserService {
      * @param User
      * @returns Created User
      */
-    save(data: User): Promise<User> {
+    create(data: User): Promise<User> {
         return this.userRepository.save(data);
     }
 
@@ -33,5 +33,33 @@ export class UserService {
         return this.userRepository.findOneOrFail({
             where: { email },
         });
+    }
+
+    /**
+     * Find user by ID
+     * @param id
+     * @returns Found User
+     */
+    findById(id: number): Promise<User> {
+        return this.userRepository.findOneOrFail(id);
+    }
+
+    /**
+     * Update user by finding with ID
+     * @param id
+     * @returns userDetails
+     * @returns Updated User
+     */
+    update(id: number, data: User): void {
+        this.userRepository.update(id, data);
+    }
+
+    /**
+     * Return all posts from the given user
+     * @param id
+     * @returns PostList
+     */
+    getPosts(id: number): Promise<User> {
+        return this.userRepository.findOne(id, { relations: ["posts"] });
     }
 }

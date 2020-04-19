@@ -4,8 +4,8 @@ export const userRegister = {
     username: Joi.string().min(3).max(30).required(),
     email: Joi.string().email({ minDomainSegments: 2 }).required(),
     password: Joi.string().min(5).required(),
-    first_name: Joi.string(),
-    last_name: Joi.string(),
+    firstName: Joi.string(),
+    lastName: Joi.string(),
     dob: Joi.date(),
     country: Joi.string(),
 };
@@ -16,10 +16,11 @@ export const userLogin = {
 };
 
 export const userUpdate = {
-    username: Joi.string().min(3).max(30).required(),
-    first_name: Joi.string(),
-    last_name: Joi.string(),
+    username: Joi.string().min(3).max(30),
+    firstName: Joi.string(),
+    lastName: Joi.string(),
     country: Joi.string(),
+    avatarUrl: Joi.string(),
 };
 
 export const createPost = {
@@ -30,13 +31,7 @@ export const createPost = {
 
 export const createComment = {
     message: Joi.string().min(1).required(),
-    tag_to: Joi.string().min(1),
-};
-
-export const createFact = {
-    img_credit: Joi.string(),
-    adult: Joi.boolean(),
-    tags: Joi.array().items(Joi.string().min(1).max(15)),
+    tagTo: Joi.string().min(1),
 };
 
 export const none = {};

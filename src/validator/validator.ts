@@ -1,12 +1,15 @@
 import Joi from "@hapi/joi";
+import { Request, Response, NextFunction } from "express";
 
 export const validate = (type) => {
-    return (req, res, next) => {
-        const validResponse = Joi.validate(req.body, type);
-        if (validResponse.error) return res.status(400).send(validResponse);
+    return (request: Request, response: Response, next: NextFunction): void => {
+        const validResponse = Joi.validate(request.body, type);
+        if (validResponse.error) {
+            response.status(400).send(validResponse);
+            return;
+        }
 
-        req.body = validResponse.value;
-
+        request.body = validResponse.value;
         next();
     };
 };

@@ -4,8 +4,6 @@ import { Post } from "./post.entity";
 @Entity("tags")
 @Unique(["tagText"])
 export class Tag {
-    constructor() {}
-
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;
 

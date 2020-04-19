@@ -1,27 +1,23 @@
 import { Response } from "express";
 import { Request } from "../interface/express.interface";
 import MakeResponse from "../interface/response.interface";
+import { UserToken } from "../interface/model.interfacet";
+import HttpStatusCode from "../utils/httpStatusCode";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { config } from "dotenv";
-config();
-import HttpStatusCode from "../utils/httpStatusCode";
 import logger from "../utils/logger";
 import _ from "lodash";
-
-import { UserToken } from "../interface/model.interfacet";
-
-// Import Entities
-// import { User } from "../entity/user.entity";
+config();
 
 // Import Services
 import { UserService } from "../service/user.service";
-const userService = new UserService();
 
 /**
  *  Get all users
  * */
 export const all = async (request: Request, response: Response): Promise<void> => {
+    const userService = new UserService();
     const alluser = await userService.all();
 
     logger.info(`All users fetched.`);
@@ -32,23 +28,28 @@ export const all = async (request: Request, response: Response): Promise<void> =
  *  Signup user, hash the password
  * */
 export const signup = async (request: Request, response: Response): Promise<void> => {
+    const userService = new UserService();
     const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(request.body.password, salt);
     request.body.password = hashed;
 
     try {
-        const user = await userService.save(request.body);
+        const user = await userService.create(request.body);
 
-        logger.info(`${user.email} REGISTERED with ID: ${user.id}`, user);
-        response.status(HttpStatusCode.CREATED).send(MakeResponse(true, "User registered successfully", user));
+        const filteredUser = _.pick(user, ["id", "username", "email", "avatarUrl", "country"]);
+        logger.info(`${filteredUser.email} REGISTERED with ID: ${filteredUser.id}`, filteredUser);
+        response.status(HttpStatusCode.CREATED).send(MakeResponse(true, "User registered successfully", filteredUser));
     } catch (err) {
-        logger.error(`${request.body.email} error`, err);
+        logger.error(`${request.body.email} ERROR in registration`, err);
         response.status(HttpStatusCode.BAD_REQUEST).send(MakeResponse(false, "Error", null, "FAILED_TO_REGISTER"));
     }
 };
 
-// *Login
+/**
+ *  Login, validate email password, returns JWT
+ * */
 export const login = async (request: Request, response: Response): Promise<void> => {
+    const userService = new UserService();
     const user = await userService.findByEmail(request.body.email);
 
     const isValid = await bcrypt.compare(request.body.password, user.password);
@@ -75,35 +76,36 @@ export const login = async (request: Request, response: Response): Promise<void>
     response.status(HttpStatusCode.OK).send(MakeResponse(true, "Login Successful", token));
 };
 
-/* 
-// *GetOne
-export const one = async (request: Request, response: Response, next: NextFunction) => {
-    const user: User = await db("users")
-        .select()
-        .where({ id: request.params.id })
-        .first();
+/**
+ *  Find one user by ID
+ * */
+export const one = async (request: Request, response: Response): Promise<void> => {
+    const userService = new UserService();
+    const user = await userService.findById(+request.params.id);
 
-    const filterUser = _.pick(user, ["id", "username", "img_url", "last_online", "country"]);
-    logger.info(`${request.params.id}' fetched`, filterUser);
-    response.send(filterUser);
+    const filteredUser = _.pick(user, ["id", "username", "email", "avatarUrl", "lastOnline", "country"]);
+    logger.info(`User with ID: ${request.params.id} is fetched`, filteredUser);
+    response.send(MakeResponse(true, "User fetched successfully", filteredUser));
 };
 
-// *Update the logged in user
-export const update = async (request: Request, response: Response, next: NextFunction) => {
-    await db("users")
-        .where({ id: request.user.id })
-        .update(request.body);
-    logger.info(`${request.user.email}' UPDATED`);
-    response.status(HttpStatusCode.ACCEPTED).end();
+/**
+ *  Update user
+ * */
+export const update = async (request: Request, response: Response): Promise<void> => {
+    const userService = new UserService();
+    await userService.update(request.user.id, request.body);
+
+    logger.info(`User with ID: ${request.user.id}' UPDATED`);
+    response.status(HttpStatusCode.ACCEPTED).send(MakeResponse(true, "User updated successfully"));
 };
 
-// *AllPosts of a user
-export const posts = async (request: Request, response: Response, next: NextFunction) => {
-    const post = await db
-        .select()
-        .from("posts")
-        .where({ user_id: request.params.id });
+/**
+ *  Get all posts from user
+ * */
+export const posts = async (request: Request, response: Response): Promise<void> => {
+    const userService = new UserService();
+    const posts = userService.getPosts(+request.params.id);
+
     logger.info(`${request.params.id}'s ALL post fetched`);
-    response.status(HttpStatusCode.OK).send(post);
+    response.status(HttpStatusCode.OK).send(MakeResponse(true, "Posts fetched succssfully", posts));
 };
- */
