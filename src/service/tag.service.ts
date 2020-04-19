@@ -15,7 +15,7 @@ export class TagService {
      */
     async insert(data: Tag): Promise<Tag> {
         const newTag = this.tagRepository.create(data);
-        logger.info(`CREATED tag ${data.tag_text}`, data);
+        logger.info(`CREATED tag ${data.tagText}`, data);
         return await this.tagRepository.save(newTag);
     }
 

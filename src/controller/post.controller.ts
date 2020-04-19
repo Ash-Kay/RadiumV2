@@ -1,35 +1,34 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Response } from "express";
+import { Request } from "../interface/express.interface";
 import { config } from "dotenv";
-import * as fs from "fs";
-import { db } from "../database/db";
-import HttpStatusCode from "../utils/error.enum";
-import logger from "../utils/logger";
-import * as _ from "lodash";
+import fs from "fs";
+import HttpStatusCode from "../utils/httpStatusCode";
+import _ from "lodash";
+config();
 
 // Import Entities
-import Post from "../models/post.model";
-import { Post as Post2 } from "../entity/post.entity";
+import { Post } from "../entity/post.entity";
 import { User } from "../entity/user.entity";
 import { Tag } from "../entity/tag.entity";
 
 // Import Services
 import { PostService } from "../service/post.service";
 import { TagService } from "../service/tag.service";
-config();
 
 // *Create
-export const create = async (request: Request, response: Response, next: NextFunction) => {
+export const create = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
     if (!request.file) {
-        return response.status(HttpStatusCode.BAD_REQUEST).end();
+        response.status(HttpStatusCode.BAD_REQUEST).end();
+        return;
     }
 
     const postService = new PostService();
     const tagService = new TagService();
 
-    let post = new Post2();
+    let post = new Post();
     post.title = request.body.title;
     post.sensitive = request.body.sensitive;
-    post.file_path = request.file.path.replace(/\\/g, "/");
+    post.mediaUrl = request.file.path.replace(/\\/g, "/");
 
     const user = new User();
     user.id = request.user.id;
@@ -43,7 +42,7 @@ export const create = async (request: Request, response: Response, next: NextFun
             tagService.linkPost(tag, post);
         } else {
             const tag = new Tag();
-            tag.tag_text = tagText;
+            tag.tagText = tagText;
             tag.posts = [post];
             tagService.insert(tag);
         }
@@ -75,7 +74,7 @@ export const feed = async (request: Request, response: Response, next: NextFunct
 
     response.status(HttpStatusCode.OK).json(posts);
 };
-
+/* 
 // *Get Post
 export const one = async (request: Request, response: Response, next: NextFunction) => {
     const [post]: Post[] = await db
@@ -161,3 +160,4 @@ export const getAllComm = async (request: Request, response: Response, next: Nex
     logger.info(`All comment on postID: ${request.params.id}`);
     response.status(HttpStatusCode.OK).send(comms);
 };
+ */

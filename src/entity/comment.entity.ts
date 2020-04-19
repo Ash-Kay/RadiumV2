@@ -11,25 +11,17 @@ export class Comment {
     message: string;
 
     @Column({ nullable: true })
-    img_url: string;
+    mediaUrl: string;
 
     @CreateDateColumn({ type: "timestamp" })
-    created_at: Date;
+    createdAt: Date;
 
     @UpdateDateColumn({ type: "timestamp" })
-    updated_at: Date;
+    updatedAt: Date;
 
-    @ManyToOne(
-        type => User,
-        user => user.comments,
-        { nullable: false, onDelete: "CASCADE" }
-    )
+    @ManyToOne((type) => User, (user) => user.comments, { nullable: false, onDelete: "CASCADE" })
     user: User;
 
-    @ManyToOne(
-        type => Post,
-        post => post.comments,
-        { nullable: false, onDelete: "CASCADE" }
-    )
+    @ManyToOne((type) => Post, (post) => post.comments, { nullable: false, onDelete: "CASCADE" })
     post: Post;
 }

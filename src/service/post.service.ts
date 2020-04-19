@@ -22,11 +22,7 @@ export class PostService {
      * Fetches posts
      */
     async getFeed(): Promise<Post[]> {
-        const posts: Post[] = await this.postRepository.find({
-            relations: ["user"],
-            order: { created_at: "DESC" },
-            select: ["id"],
-        });
+        const posts: Post[] = await this.postRepository.find({});
         logger.info("Feed Fetched");
         return posts;
     }

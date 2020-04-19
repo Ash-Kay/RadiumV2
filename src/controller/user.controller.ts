@@ -1,63 +1,81 @@
-import { NextFunction, Request, Response } from "express";
-import * as bcrypt from "bcryptjs";
-import * as jwt from "jsonwebtoken";
+import { Response } from "express";
+import { Request } from "../interface/express.interface";
+import MakeResponse from "../interface/response.interface";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { config } from "dotenv";
-import { db } from "../database/db";
-import HttpStatusCode from "../utils/error.enum";
-import logger from "../utils/logger";
-import * as _ from "lodash";
-import User from "../models/user.model";
-import { getRepository } from "typeorm";
-import { User as User2 } from "../entity/user.entity";
 config();
+import HttpStatusCode from "../utils/httpStatusCode";
+import logger from "../utils/logger";
+import _ from "lodash";
 
-export const all = async (request: Request, response: Response, next: NextFunction) => {
-    const alluser = await db.select().from("users");
-    response.send(alluser);
+import { UserToken } from "../interface/model.interfacet";
+
+// Import Entities
+// import { User } from "../entity/user.entity";
+
+// Import Services
+import { UserService } from "../service/user.service";
+const userService = new UserService();
+
+/**
+ *  Get all users
+ * */
+export const all = async (request: Request, response: Response): Promise<void> => {
+    const alluser = await userService.all();
+
+    logger.info(`All users fetched.`);
+    response.send(MakeResponse(true, "All users fetched successfully", alluser));
 };
 
-// *SignUp
-export const signup = async (request: Request, response: Response, next: NextFunction) => {
+/**
+ *  Signup user, hash the password
+ * */
+export const signup = async (request: Request, response: Response): Promise<void> => {
     const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(request.body.password, salt);
     request.body.password = hashed;
 
-    const userRepository = getRepository(User2);
     try {
-        const user = await userRepository.save(request.body);
-        logger.info(`${request.body.email} REGISTERED`, user);
-        response.status(HttpStatusCode.CREATED).send(user);
+        const user = await userService.save(request.body);
+
+        logger.info(`${user.email} REGISTERED with ID: ${user.id}`, user);
+        response.status(HttpStatusCode.CREATED).send(MakeResponse(true, "User registered successfully", user));
     } catch (err) {
         logger.error(`${request.body.email} error`, err);
-        response.status(HttpStatusCode.BAD_REQUEST).end();
+        response.status(HttpStatusCode.BAD_REQUEST).send(MakeResponse(false, "Error", null, "FAILED_TO_REGISTER"));
     }
-    // const user: User = await db("users").insert(request.body);
 };
 
 // *Login
-export const login = async (request: Request, response: Response, next: NextFunction) => {
-    const user: User = await db("users")
-        .where({ email: request.body.email })
-        .first();
+export const login = async (request: Request, response: Response): Promise<void> => {
+    const user = await userService.findByEmail(request.body.email);
 
     const isValid = await bcrypt.compare(request.body.password, user.password);
+    let token;
     if (isValid) {
-        var token = jwt.sign(
-            { email: user.email, id: user.id, type: user.user_type, username: user.username },
-            process.env.JWT_KEY,
-            {
-                expiresIn: "7d"
-            }
-        );
+        const tokenUserDetails: UserToken = {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            username: user.username,
+        };
+        token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
+            expiresIn: "7d",
+        });
     } else {
         logger.info(`AUTH FAILED: ${request.user.email}'s password does't match`);
-        response.status(HttpStatusCode.BAD_REQUEST).end();
+        response
+            .status(HttpStatusCode.BAD_REQUEST)
+            .send(MakeResponse(false, "Email and password does't match", null, "FAILED_TO_LOGIN"));
+        return;
     }
 
     logger.info(`${request.body.email}' LOGGED in`);
-    response.status(HttpStatusCode.OK).send(token);
+    response.status(HttpStatusCode.OK).send(MakeResponse(true, "Login Successful", token));
 };
 
+/* 
 // *GetOne
 export const one = async (request: Request, response: Response, next: NextFunction) => {
     const user: User = await db("users")
@@ -88,3 +106,4 @@ export const posts = async (request: Request, response: Response, next: NextFunc
     logger.info(`${request.params.id}'s ALL post fetched`);
     response.status(HttpStatusCode.OK).send(post);
 };
+ */

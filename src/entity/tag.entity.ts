@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, CreateDateColumn, U
 import { Post } from "./post.entity";
 
 @Entity("tags")
-@Unique(["tag_text"])
+@Unique(["tagText"])
 export class Tag {
     constructor() {}
 
@@ -10,10 +10,10 @@ export class Tag {
     id: number;
 
     @Column({ length: 30 })
-    tag_text: string;
+    tagText: string;
 
     @CreateDateColumn({ type: "timestamp" })
-    created_at: Date;
+    createdAt: Date;
 
     @ManyToMany((type) => Post, (post) => post.tags, { nullable: false, cascade: true })
     posts: Post[];

@@ -3,6 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, Up
 import { Post } from "./post.entity";
 import { Comment } from "./comment.entity";
 import { Like } from "./like.entity";
+import { Role } from "../interface/role.enum";
 
 @Entity("users")
 @Unique(["username"])
@@ -21,47 +22,41 @@ export class User {
     password: string;
 
     @Column({ nullable: true })
-    img_url: string;
+    avatarUrl: string;
 
     @Column({ length: 50, nullable: true })
-    first_name: string;
+    firsName: string;
 
     @Column({ length: 50, nullable: true })
-    last_name: string;
+    lastName: string;
 
     @CreateDateColumn({ type: "timestamp" })
-    created_at: Date;
+    createdAt: Date;
 
     @UpdateDateColumn({ type: "timestamp" })
-    updated_at: Date;
+    updatedAt: Date;
 
     @Column({ length: 30, nullable: true })
-    last_ip: string;
+    lastIp: string;
 
     @Column({ type: "datetime", default: () => "CURRENT_TIMESTAMP()" })
-    last_online: Date;
+    lastOnline: Date;
 
     @Column({ type: "date", nullable: true })
     dob: Date;
 
+    @Column({ type: "enum", enum: Role, default: Role.USER })
+    role: Role;
+
     @Column({ length: 30, nullable: true })
     country: string;
 
-    @OneToMany(
-        type => Post,
-        post => post.user
-    )
+    @OneToMany((type) => Post, (post) => post.user)
     posts: Post[];
 
-    @OneToMany(
-        type => Comment,
-        comment => comment.user
-    )
+    @OneToMany((type) => Comment, (comment) => comment.user)
     comments: Comment[];
 
-    @OneToMany(
-        type => Like,
-        like => like.user
-    )
+    @OneToMany((type) => Like, (like) => like.user)
     likes: Like[];
 }
