@@ -36,6 +36,11 @@ export class PostService {
      * @returns post with user inside
      */
     loadPostWithUser(id: number): Promise<Post> {
-        return this.postRepository.findOne(id, { relations: ["user"] });
+        return this.postRepository
+            .createQueryBuilder("post")
+            .where("post.id = :id", { id })
+            .innerJoin("post.user", "user")
+            .addSelect(["user.id", "user.username", "user.avatarUrl"])
+            .getOne();
     }
 }

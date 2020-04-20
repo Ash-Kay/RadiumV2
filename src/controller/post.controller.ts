@@ -62,24 +62,10 @@ export const feed = async (request: Request, response: Response): Promise<void> 
     response.status(HttpStatusCode.OK).send(makeResponse(true, "Feed fetched sucessfully!", posts));
 };
 
-// *Get Post
+/**
+ *  Get one Post by ID
+ * */
 export const one = async (request: Request, response: Response): Promise<void> => {
-    // const [post]: Post[] = await db
-    //     .select(
-    //         "posts.id",
-    //         "posts.user_id",
-    //         "posts.title",
-    //         "posts.file_path",
-    //         "posts.adult",
-    //         "posts.updated_at",
-    //         "posts.created_at",
-    //         "users.username",
-    //         "users.img_url as user_avatar"
-    //     )
-    //     .from("posts")
-    //     .leftJoin("users", "users.id", "posts.user_id")
-    //     .where({ "posts.id": request.params.id });
-
     const postService = new PostService();
     const post = await postService.loadPostWithUser(+request.params.id);
 
