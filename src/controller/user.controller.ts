@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { Request } from "../interface/express.interface";
-import MakeResponse from "../interface/response.interface";
+import makeResponse from "../interface/response.interface";
 import { UserToken } from "../interface/model.interfacet";
 import HttpStatusCode from "../utils/httpStatusCode";
 import bcrypt from "bcryptjs";
@@ -21,7 +21,7 @@ export const all = async (request: Request, response: Response): Promise<void> =
     const alluser = await userService.all();
 
     logger.info(`All users fetched.`);
-    response.send(MakeResponse(true, "All users fetched successfully", alluser));
+    response.send(makeResponse(true, "All users fetched successfully", alluser));
 };
 
 /**
@@ -38,10 +38,10 @@ export const signup = async (request: Request, response: Response): Promise<void
 
         const filteredUser = _.pick(user, ["id", "username", "email", "avatarUrl", "country"]);
         logger.info(`${filteredUser.email} REGISTERED with ID: ${filteredUser.id}`, filteredUser);
-        response.status(HttpStatusCode.CREATED).send(MakeResponse(true, "User registered successfully", filteredUser));
+        response.status(HttpStatusCode.CREATED).send(makeResponse(true, "User registered successfully", filteredUser));
     } catch (err) {
         logger.error(`${request.body.email} ERROR in registration`, err);
-        response.status(HttpStatusCode.BAD_REQUEST).send(MakeResponse(false, "Error", null, "FAILED_TO_REGISTER"));
+        response.status(HttpStatusCode.BAD_REQUEST).send(makeResponse(false, "Error", null, "FAILED_TO_REGISTER"));
     }
 };
 
@@ -51,6 +51,15 @@ export const signup = async (request: Request, response: Response): Promise<void
 export const login = async (request: Request, response: Response): Promise<void> => {
     const userService = new UserService();
     const user = await userService.findByEmail(request.body.email);
+
+    console.log("user", user);
+    if (user === undefined) {
+        logger.info(`AUTH FAILED: ${request.body.email}'s password does't match`);
+        response
+            .status(HttpStatusCode.BAD_REQUEST)
+            .send(makeResponse(false, "Email and password does't match", null, "FAILED_TO_LOGIN"));
+        return;
+    }
 
     const isValid = await bcrypt.compare(request.body.password, user.password);
     let token;
@@ -68,12 +77,12 @@ export const login = async (request: Request, response: Response): Promise<void>
         logger.info(`AUTH FAILED: ${request.user.email}'s password does't match`);
         response
             .status(HttpStatusCode.BAD_REQUEST)
-            .send(MakeResponse(false, "Email and password does't match", null, "FAILED_TO_LOGIN"));
+            .send(makeResponse(false, "Email and password does't match", null, "FAILED_TO_LOGIN"));
         return;
     }
 
     logger.info(`${request.body.email}' LOGGED in`);
-    response.status(HttpStatusCode.OK).send(MakeResponse(true, "Login Successful", token));
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", token));
 };
 
 /**
@@ -83,9 +92,15 @@ export const one = async (request: Request, response: Response): Promise<void> =
     const userService = new UserService();
     const user = await userService.findById(+request.params.id);
 
-    const filteredUser = _.pick(user, ["id", "username", "email", "avatarUrl", "lastOnline", "country"]);
+    if (user === undefined) {
+        logger.info(`User not found with ID :${request.params.id}`);
+        response.status(HttpStatusCode.OK).send(makeResponse(false, "No such user found", null, "USER NOT FOUND"));
+        return;
+    }
+
+    const filteredUser = _.pick(user, ["id", "username", "avatarUrl", "lastOnline", "country"]);
     logger.info(`User with ID: ${request.params.id} is fetched`, filteredUser);
-    response.send(MakeResponse(true, "User fetched successfully", filteredUser));
+    response.send(makeResponse(true, "User fetched successfully", filteredUser));
 };
 
 /**
@@ -96,7 +111,7 @@ export const update = async (request: Request, response: Response): Promise<void
     await userService.update(request.user.id, request.body);
 
     logger.info(`User with ID: ${request.user.id}' UPDATED`);
-    response.status(HttpStatusCode.ACCEPTED).send(MakeResponse(true, "User updated successfully"));
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "User updated successfully"));
 };
 
 /**
@@ -104,8 +119,13 @@ export const update = async (request: Request, response: Response): Promise<void
  * */
 export const posts = async (request: Request, response: Response): Promise<void> => {
     const userService = new UserService();
-    const posts = userService.getPosts(+request.params.id);
+    const user = await userService.loadUserWithPosts(+request.params.id);
 
+    if (user == undefined) {
+        logger.info(`Tried to fetch post of unexisting with ID :${request.params.id}`);
+        response.status(HttpStatusCode.OK).send(makeResponse(false, "No such user found", null, "USER NOT FOUND"));
+        return;
+    }
     logger.info(`${request.params.id}'s ALL post fetched`);
-    response.status(HttpStatusCode.OK).send(MakeResponse(true, "Posts fetched succssfully", posts));
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Posts fetched succssfully", user.posts));
 };

@@ -13,6 +13,6 @@ export class Tag {
     @CreateDateColumn({ type: "timestamp" })
     createdAt: Date;
 
-    @ManyToMany((type) => Post, (post) => post.tags, { nullable: false, cascade: true })
+    @ManyToMany(() => Post, (post) => post.tags, { nullable: false, cascade: true })
     posts: Post[];
 }

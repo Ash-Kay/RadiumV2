@@ -30,7 +30,7 @@ export class UserService {
      * @returns Found User
      */
     findByEmail(email: string): Promise<User> {
-        return this.userRepository.findOneOrFail({
+        return this.userRepository.findOne({
             where: { email },
         });
     }
@@ -41,7 +41,7 @@ export class UserService {
      * @returns Found User
      */
     findById(id: number): Promise<User> {
-        return this.userRepository.findOneOrFail(id);
+        return this.userRepository.findOne(id);
     }
 
     /**
@@ -57,9 +57,9 @@ export class UserService {
     /**
      * Return all posts from the given user
      * @param id
-     * @returns PostList
+     * @returns User with post inside
      */
-    getPosts(id: number): Promise<User> {
+    loadUserWithPosts(id: number): Promise<User> {
         return this.userRepository.findOne(id, { relations: ["posts"] });
     }
 }

@@ -19,9 +19,9 @@ export class Comment {
     @UpdateDateColumn({ type: "timestamp" })
     updatedAt: Date;
 
-    @ManyToOne((type) => User, (user) => user.comments, { nullable: false, onDelete: "CASCADE" })
+    @ManyToOne(() => User, (user) => user.comments, { nullable: false, onDelete: "CASCADE" })
     user: User;
 
-    @ManyToOne((type) => Post, (post) => post.comments, { nullable: false, onDelete: "CASCADE" })
+    @ManyToOne(() => Post, (post) => post.comments, { nullable: false, onDelete: "CASCADE" })
     post: Post;
 }

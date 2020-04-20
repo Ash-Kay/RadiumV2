@@ -1,109 +1,100 @@
-import { NextFunction, Response } from "express";
+import { Response } from "express";
 import { Request } from "../interface/express.interface";
+import makeResponse from "../interface/response.interface";
 import { config } from "dotenv";
-import fs from "fs";
 import HttpStatusCode from "../utils/httpStatusCode";
+import logger from "../utils/logger";
 import _ from "lodash";
+import fs from "fs";
 config();
-
-// Import Entities
-import { Post } from "../entity/post.entity";
-import { User } from "../entity/user.entity";
-import { Tag } from "../entity/tag.entity";
 
 // Import Services
 import { PostService } from "../service/post.service";
 import { TagService } from "../service/tag.service";
 
-// *Create
-export const create = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
+/**
+ *  Create post
+ * */
+export const create = async (request: Request, response: Response): Promise<void> => {
     if (!request.file) {
-        response.status(HttpStatusCode.BAD_REQUEST).end();
+        response.status(HttpStatusCode.BAD_REQUEST).end(makeResponse(false, "No file found!!!", null, "NO_FILE_FOUND"));
         return;
     }
 
     const postService = new PostService();
     const tagService = new TagService();
 
-    let post = new Post();
-    post.title = request.body.title;
-    post.sensitive = request.body.sensitive;
-    post.mediaUrl = request.file.path.replace(/\\/g, "/");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let post: any = {
+        title: request.body.title,
+        sensitive: request.body.sensitive,
+        mediaUrl: request.file.path.replace(/\\/g, "/"),
+        user: {
+            id: request.user.id,
+        },
+    };
 
-    const user = new User();
-    user.id = request.user.id;
-    post.user = user;
-
-    post = await postService.insert(post);
+    post = await postService.create(post);
 
     request.body.tags.forEach(async (tagText) => {
-        const tag: Tag = await tagService.getByText(tagText);
+        const tag = await tagService.getByText(tagText);
         if (tag) {
             tagService.linkPost(tag, post);
+            logger.info(`Added tag ID: ${tag.id} to post ID: ${post.id}`);
         } else {
-            const tag = new Tag();
-            tag.tagText = tagText;
-            tag.posts = [post];
-            tagService.insert(tag);
+            const newTag = await tagService.create(tagText, post);
+            logger.info(`CREATED tag ${newTag.tagText} added to post with ID: ${post.id}`, newTag);
         }
     });
 
-    response.status(HttpStatusCode.CREATED).json({ id: post.id });
+    logger.info(`User with ID: ${post.user.id} CREATED post with ID: ${post.id}`, post);
+    response.status(HttpStatusCode.CREATED).send(makeResponse(true, "Post Created Sucessfully", post));
 };
 
-// *GetFeed
-export const feed = async (request: Request, response: Response, next: NextFunction) => {
-    /* const posts: Post[] = await db
-        .select(
-            "posts.id",
-            "posts.user_id",
-            "posts.title",
-            "posts.file_path",
-            "posts.adult",
-            "posts.updated_at",
-            "posts.created_at",
-            "users.username",
-            "users.img_url as user_avatar"
-        )
-        .from("posts")
-        .leftJoin("users", "users.id", "posts.user_id")
-        .orderBy("created_at", "desc"); */
+/**
+ *  Get Feed
+ * */
+export const feed = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+    const posts = await postService.getFeed();
+
+    logger.info("Feed Fetched");
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Feed fetched sucessfully!", posts));
+};
+
+// *Get Post
+export const one = async (request: Request, response: Response): Promise<void> => {
+    // const [post]: Post[] = await db
+    //     .select(
+    //         "posts.id",
+    //         "posts.user_id",
+    //         "posts.title",
+    //         "posts.file_path",
+    //         "posts.adult",
+    //         "posts.updated_at",
+    //         "posts.created_at",
+    //         "users.username",
+    //         "users.img_url as user_avatar"
+    //     )
+    //     .from("posts")
+    //     .leftJoin("users", "users.id", "posts.user_id")
+    //     .where({ "posts.id": request.params.id });
 
     const postService = new PostService();
-    const posts = postService.getFeed();
-
-    response.status(HttpStatusCode.OK).json(posts);
-};
-/* 
-// *Get Post
-export const one = async (request: Request, response: Response, next: NextFunction) => {
-    const [post]: Post[] = await db
-        .select(
-            "posts.id",
-            "posts.user_id",
-            "posts.title",
-            "posts.file_path",
-            "posts.adult",
-            "posts.updated_at",
-            "posts.created_at",
-            "users.username",
-            "users.img_url as user_avatar"
-        )
-        .from("posts")
-        .leftJoin("users", "users.id", "posts.user_id")
-        .where({ "posts.id": request.params.id });
+    const post = await postService.loadPostWithUser(+request.params.id);
 
     if (post === undefined) {
         logger.info("Post NOT found");
-        response.status(HttpStatusCode.NOT_FOUND).end();
-    } else {
-        logger.info(`Post fetched with id: ${post.id}`, post);
-        response.status(HttpStatusCode.OK).send(post);
+        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "Post not found!", null, "POST NOT FOUND"));
+        return;
     }
-};
 
+    logger.info(`Post with ID: ${request.params.id} fetched`);
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Post fetched sucessfully!", post));
+};
+/* 
 // *Delete Post
-export const remove = async (request: Request, response: Response, next: NextFunction) => {
+export const remove = async (request: Request, response: Response  ): Promise<void> => {
     const post: Post = await db("posts").select().where({ id: request.params.id }).first();
 
     if (post === undefined) {
@@ -128,7 +119,7 @@ export const remove = async (request: Request, response: Response, next: NextFun
 };
 
 // *Like Post
-export const like = async (request: Request, response: Response, next: NextFunction) => {
+export const like = async (request: Request, response: Response  ): Promise<void> => {
     await db("likes").insert({ post_id: request.params.id, user_id: request.user.id });
 
     logger.info(`${request.user.id} LIKED post: ${request.params.id}`);
@@ -136,7 +127,7 @@ export const like = async (request: Request, response: Response, next: NextFunct
 };
 
 // *UnLike
-export const unlike = async (request: Request, response: Response, next: NextFunction) => {
+export const unlike = async (request: Request, response: Response  ): Promise<void> => {
     await db("likes").where({ post_id: request.params.id, user_id: request.user.id }).del();
 
     logger.info(`${request.user.id} UNLIKED post: ${request.params.id}`);
@@ -144,7 +135,7 @@ export const unlike = async (request: Request, response: Response, next: NextFun
 };
 
 // *Comment
-export const comment = async (request: Request, response: Response, next: NextFunction) => {
+export const comment = async (request: Request, response: Response  ): Promise<void> => {
     request.body.post_id = request.params.id;
     request.body.user_id = request.user.id;
     const id: number = await db("comments").insert(request.body);
@@ -154,7 +145,7 @@ export const comment = async (request: Request, response: Response, next: NextFu
 };
 
 // *All Comment on a post
-export const getAllComm = async (request: Request, response: Response, next: NextFunction) => {
+export const getAllComm = async (request: Request, response: Response  ): Promise<void> => {
     const comms = await db("comments").where({ post_id: request.params.id });
 
     logger.info(`All comment on postID: ${request.params.id}`);

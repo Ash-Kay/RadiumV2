@@ -1,6 +1,5 @@
 import { Post } from "../entity/post.entity";
 import { getRepository, Repository } from "typeorm";
-import logger from "../utils/logger";
 
 export class PostService {
     postRepository: Repository<Post>;
@@ -11,19 +10,32 @@ export class PostService {
 
     /**
      * Insert Post into database
+     * @param Post data
+     * @returns Post entity
      */
-    async insert(data: Post): Promise<Post> {
-        const newPost = this.postRepository.create(data);
-        logger.info(`${data.user.id} CREATED post with id ${data.id}`, data);
-        return await this.postRepository.save(newPost);
+    create(data: Post): Promise<Post> {
+        return this.postRepository.save(data);
     }
 
     /**
      * Fetches posts
+     * @returns List of Postss
      */
-    async getFeed(): Promise<Post[]> {
-        const posts: Post[] = await this.postRepository.find({});
-        logger.info("Feed Fetched");
+    getFeed(): Promise<Post[]> {
+        const posts = this.postRepository.find({
+            order: {
+                createdAt: "DESC",
+            },
+        });
         return posts;
+    }
+
+    /**
+     * Return posts with user inside
+     * @param id
+     * @returns post with user inside
+     */
+    loadPostWithUser(id: number): Promise<Post> {
+        return this.postRepository.findOne(id, { relations: ["user"] });
     }
 }

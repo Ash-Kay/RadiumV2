@@ -51,12 +51,12 @@ export class User {
     @Column({ length: 30, nullable: true })
     country: string;
 
-    @OneToMany((type) => Post, (post) => post.user)
+    @OneToMany(() => Post, (post) => post.user)
     posts: Post[];
 
-    @OneToMany((type) => Comment, (comment) => comment.user)
+    @OneToMany(() => Comment, (comment) => comment.user)
     comments: Comment[];
 
-    @OneToMany((type) => Like, (like) => like.user)
+    @OneToMany(() => Like, (like) => like.user)
     likes: Like[];
 }

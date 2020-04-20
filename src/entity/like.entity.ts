@@ -4,10 +4,10 @@ import { Post } from "./post.entity";
 
 @Entity("likes")
 export class Like {
-    @ManyToOne((type) => User, (user) => user.likes, { primary: true, nullable: false })
+    @ManyToOne(() => User, (user) => user.likes, { primary: true, nullable: false })
     user: User;
 
-    @ManyToOne((type) => Post, (post) => post.likes, { primary: true, nullable: false })
+    @ManyToOne(() => Post, (post) => post.likes, { primary: true, nullable: false })
     post: Post;
 
     @CreateDateColumn({ type: "timestamp" })

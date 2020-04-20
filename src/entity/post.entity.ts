@@ -34,16 +34,16 @@ export class Post {
     @UpdateDateColumn({ type: "timestamp" })
     updatedAt: Date;
 
-    @ManyToOne((type) => User, (user) => user.posts, { nullable: false, onDelete: "CASCADE" })
+    @ManyToOne(() => User, (user) => user.posts, { nullable: false, onDelete: "CASCADE" })
     user: User;
 
-    @OneToMany((type) => Comment, (comment) => comment.post)
+    @OneToMany(() => Comment, (comment) => comment.post)
     comments: Comment[];
 
-    @OneToMany((type) => Like, (like) => like.post)
+    @OneToMany(() => Like, (like) => like.post)
     likes: Like[];
 
-    @ManyToMany((type) => Tag, (tags) => tags.posts, {
+    @ManyToMany(() => Tag, (tags) => tags.posts, {
         cascade: ["insert", "update"],
     })
     @JoinTable({ name: "post_tag" })

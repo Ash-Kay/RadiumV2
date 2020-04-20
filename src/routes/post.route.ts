@@ -28,7 +28,7 @@ const limits = {
 };
 
 const fileFilter = (req, file, cb) => {
-    var allowedMimes = ["image/jpeg", "image/pjpeg", "image/png", "image/gif"];
+    const allowedMimes = ["image/jpeg", "image/pjpeg", "image/png", "image/gif"];
 
     if (allowedMimes.includes(file.mimetype)) {
         cb(null, true);
@@ -38,15 +38,11 @@ const fileFilter = (req, file, cb) => {
 };
 
 // file size 50MB= 1024*1024*50 = 52428800
-const upload = multer({
-    storage,
-    limits: limits,
-    fileFilter: fileFilter,
-});
+const upload = multer({ storage, limits, fileFilter });
 
 router.post("/", verifyAuth, upload.single("file"), validate(schema.createPost), PostController.create);
 router.get("/", PostController.feed);
-// router.get("/:id", PostController.one);
+router.get("/:id", PostController.one);
 // router.delete("/:id", verifyAuth, PostController.remove);
 // router.post("/:id/like", verifyAuth, PostController.like);
 // router.delete("/:id/unlike", verifyAuth, PostController.unlike);
