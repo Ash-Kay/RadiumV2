@@ -67,7 +67,7 @@ export const feed = async (request: Request, response: Response): Promise<void> 
  * */
 export const one = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
-    const post = await postService.loadPostWithUser(+request.params.id);
+    const post = await postService.findAndLoadUser(+request.params.id);
 
     if (post === undefined) {
         logger.info("Post NOT found");
@@ -78,40 +78,80 @@ export const one = async (request: Request, response: Response): Promise<void> =
     logger.info(`Post with ID: ${request.params.id} fetched`);
     response.status(HttpStatusCode.OK).send(makeResponse(true, "Post fetched sucessfully!", post));
 };
-/* 
-// *Delete Post
-export const remove = async (request: Request, response: Response  ): Promise<void> => {
-    const post: Post = await db("posts").select().where({ id: request.params.id }).first();
+
+/**
+ *  Soft Delete a post
+ * */
+export const remove = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+    const post = await postService.findAndLoadUser(+request.params.id);
 
     if (post === undefined) {
         logger.info("Post NOT found");
-        return response.status(HttpStatusCode.NOT_FOUND).end();
-    } else if (post.user_id !== request.user.id) {
-        logger.error(`AUTH FAILED: ${request.user.id} tried to delete ${post.user_id}'s post, Post ID: ${post.id}`);
-        return response.status(HttpStatusCode.UNAUTHORIZED).end();
+        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "Post not found!", null, "POST NOT FOUND"));
+        return;
+    } else if (post.user.id !== request.user.id) {
+        logger.error(`AUTH FAILED: ${request.user.id} tried to delete ${post.user.id}'s post, Post ID: ${post.id}`);
+        response
+            .status(HttpStatusCode.UNAUTHORIZED)
+            .send(makeResponse(false, "Error Deleting Post!", null, "Error deleting post"));
+        return;
     }
 
-    await db("posts").where({ id: request.params.id }).del(); //return boolean 0 not deleted 1 deleted
+    await postService.softDelete(+request.params.id);
 
-    fs.unlink(post.file_path, (err) => {
+    response.send(makeResponse(true, "Post deleted"));
+};
+
+/**
+ *  Permanently deletes a post
+ * */
+export const permenentRemove = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+    const post = await postService.findWithSoftDeleted(+request.params.id);
+
+    if (post === undefined) {
+        logger.info("Post NOT found");
+        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "Post not found!", null, "POST NOT FOUND"));
+        return;
+    }
+
+    await postService.permaDelete(+request.params.id);
+
+    fs.unlink(post.mediaUrl, (err) => {
         if (err) {
             logger.error("File CANT be DELETED from fs", err);
-            response.status(HttpStatusCode.INTERNAL_SERVER_ERROR).end();
-        } else {
-            logger.info("File DELETED from db and fs", post);
-            response.status(HttpStatusCode.OK).end();
+            response
+                .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+                .send(makeResponse(false, "Error Deleting Post!", null, "Error deleting post"));
+            return;
         }
     });
+    logger.info("File DELETED from db and fs", post);
+
+    response.send(makeResponse(true, "Post deleted Permanently"));
 };
 
 // *Like Post
-export const like = async (request: Request, response: Response  ): Promise<void> => {
-    await db("likes").insert({ post_id: request.params.id, user_id: request.user.id });
+export const like = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
 
-    logger.info(`${request.user.id} LIKED post: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).end();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+    let like: any = {
+        user: {
+            id: request.user.id,
+        },
+        post: {
+            id: request.params.id,
+        },
+    };
+
+    like = await postService.like(like);
+
+    logger.info(`User with ID: ${request.user.id} LIKED post with ID: ${request.params.id}`);
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Liked", like));
 };
-
+/* 
 // *UnLike
 export const unlike = async (request: Request, response: Response  ): Promise<void> => {
     await db("likes").where({ post_id: request.params.id, user_id: request.user.id }).del();

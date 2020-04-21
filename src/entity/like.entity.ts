@@ -1,4 +1,4 @@
-import { Entity, CreateDateColumn, UpdateDateColumn, ManyToOne } from "typeorm";
+import { Entity, CreateDateColumn, ManyToOne, PrimaryColumn } from "typeorm";
 import { User } from "./user.entity";
 import { Post } from "./post.entity";
 
@@ -12,7 +12,4 @@ export class Like {
 
     @CreateDateColumn({ type: "timestamp" })
     createdAt: Date;
-
-    @UpdateDateColumn({ type: "timestamp" })
-    updatedAt: Date;
 }

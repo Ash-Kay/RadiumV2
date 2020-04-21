@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn, Unique } from "typeorm";
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    OneToMany,
+    CreateDateColumn,
+    UpdateDateColumn,
+    Unique,
+    DeleteDateColumn,
+} from "typeorm";
 
 import { Post } from "./post.entity";
 import { Comment } from "./comment.entity";
@@ -35,6 +44,9 @@ export class User {
 
     @UpdateDateColumn({ type: "timestamp" })
     updatedAt: Date;
+
+    @DeleteDateColumn({ type: "timestamp" })
+    deletedAt: Date;
 
     @Column({ length: 30, nullable: true })
     lastIp: string;

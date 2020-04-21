@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from "typeorm";
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    CreateDateColumn,
+    UpdateDateColumn,
+    ManyToOne,
+    DeleteDateColumn,
+} from "typeorm";
 import { User } from "./user.entity";
 import { Post } from "./post.entity";
 
@@ -18,6 +26,9 @@ export class Comment {
 
     @UpdateDateColumn({ type: "timestamp" })
     updatedAt: Date;
+
+    @DeleteDateColumn({ type: "timestamp" })
+    deletedAt: Date;
 
     @ManyToOne(() => User, (user) => user.comments, { nullable: false, onDelete: "CASCADE" })
     user: User;

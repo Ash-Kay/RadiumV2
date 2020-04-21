@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, CreateDateColumn, Unique } from "typeorm";
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    ManyToMany,
+    CreateDateColumn,
+    Unique,
+    DeleteDateColumn,
+} from "typeorm";
 import { Post } from "./post.entity";
 
 @Entity("tags")
@@ -12,6 +20,9 @@ export class Tag {
 
     @CreateDateColumn({ type: "timestamp" })
     createdAt: Date;
+
+    @DeleteDateColumn({ type: "timestamp" })
+    deletedAt: Date;
 
     @ManyToMany(() => Post, (post) => post.tags, { nullable: false, cascade: true })
     posts: Post[];

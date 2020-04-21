@@ -14,10 +14,14 @@ export const verifyAuth = (request: Request, response: Response, next: NextFunct
     } catch (e) {
         logger.error("JWT token INVALID");
         logger.warn("JWT token " + request.headers.authorization.split(" ")[1]);
-        return response.status(HttpStatusCode.UNAUTHORIZED).end();
+        return response.status(HttpStatusCode.BAD_REQUEST).end();
     }
 };
 
+/**
+ * Verifies if User have right permission
+ * verifyAuth must be present before this route
+ * */
 export const verifyAuthorization = (request: Request, response: Response, next: NextFunction): void => {
     try {
         if (request.user.role !== "ADMIN") {
