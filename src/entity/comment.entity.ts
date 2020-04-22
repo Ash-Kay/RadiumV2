@@ -6,6 +6,8 @@ import {
     UpdateDateColumn,
     ManyToOne,
     DeleteDateColumn,
+    OneToOne,
+    JoinColumn,
 } from "typeorm";
 import { User } from "./user.entity";
 import { Post } from "./post.entity";
@@ -29,6 +31,10 @@ export class Comment {
 
     @DeleteDateColumn({ type: "timestamp" })
     deletedAt: Date;
+
+    @OneToOne(() => User, (user) => user.comments, { nullable: true })
+    @JoinColumn()
+    tagTo: User;
 
     @ManyToOne(() => User, (user) => user.comments, { nullable: false, onDelete: "CASCADE" })
     user: User;

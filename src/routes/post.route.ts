@@ -46,8 +46,8 @@ router.get("/:id", PostController.one);
 router.delete("/:id", verifyAuth, PostController.remove);
 router.delete("/:id/permenent", verifyAuth, verifyAuthorization, PostController.permenentRemove);
 router.post("/:id/like", verifyAuth, PostController.like);
-// router.delete("/:id/unlike", verifyAuth, PostController.unlike);
-// router.post("/:id/comment", verifyAuth, upload.single("file"), validate(schema.createComment), PostController.comment);
-// router.get("/:id/comment", PostController.getAllComm);
+router.delete("/:id/unlike", verifyAuth, PostController.unlike);
+router.post("/:id/comment", verifyAuth, upload.single("file"), validate(schema.createComment), PostController.comment);
+router.get("/:id/comment", PostController.allComments);
 
 export default router;

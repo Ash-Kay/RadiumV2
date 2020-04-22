@@ -1,14 +1,17 @@
 import { Post } from "../entity/post.entity";
 import { Like } from "../entity/like.entity";
+import { Comment } from "../entity/comment.entity";
 import { getRepository, Repository, UpdateResult, DeleteResult } from "typeorm";
 
 export class PostService {
     postRepository: Repository<Post>;
     likeRepository: Repository<Like>;
+    commentRepository: Repository<Comment>;
 
     constructor() {
         this.postRepository = getRepository(Post);
         this.likeRepository = getRepository(Like);
+        this.commentRepository = getRepository(Comment);
     }
 
     /**
@@ -86,9 +89,36 @@ export class PostService {
     /**
      * Like
      * @param id
-     * @returns
+     * @returns Like entity
      */
     like(data: Like): Promise<Like> {
         return this.likeRepository.save(data);
+    }
+
+    /**
+     * Unlike
+     * @param {"user":id,"post":id}
+     * @returns UpdateResult
+     */
+    unlike(id: object): Promise<DeleteResult> {
+        return this.likeRepository.delete(id);
+    }
+
+    /**
+     * Comment
+     * @param Comment data
+     * @returns Comment Entity
+     */
+    comment(data: Comment): Promise<Comment> {
+        return this.commentRepository.save(data);
+    }
+
+    /**
+     * All Comments on a post
+     * @param id of post
+     * @returns all comments
+     */
+    getAllcomment(id: number): Promise<Comment[]> {
+        return this.commentRepository.find({ where: [{ post: { id } }] });
     }
 }

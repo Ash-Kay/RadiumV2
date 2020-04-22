@@ -4,7 +4,6 @@ import makeResponse from "../interface/response.interface";
 import { config } from "dotenv";
 import HttpStatusCode from "../utils/httpStatusCode";
 import logger from "../utils/logger";
-import _ from "lodash";
 import fs from "fs";
 config();
 
@@ -100,6 +99,7 @@ export const remove = async (request: Request, response: Response): Promise<void
 
     await postService.softDelete(+request.params.id);
 
+    logger.info(`Post removed with ID: ${request.params.id}`);
     response.send(makeResponse(true, "Post deleted"));
 };
 
@@ -127,12 +127,14 @@ export const permenentRemove = async (request: Request, response: Response): Pro
             return;
         }
     });
-    logger.info("File DELETED from db and fs", post);
 
+    logger.info("File DELETED from db and fs", post);
     response.send(makeResponse(true, "Post deleted Permanently"));
 };
 
-// *Like Post
+/**
+ *  Like a post
+ * */
 export const like = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
 
@@ -146,35 +148,74 @@ export const like = async (request: Request, response: Response): Promise<void> 
         },
     };
 
-    like = await postService.like(like);
+    try {
+        like = await postService.like(like);
+    } catch (e) {
+        if (e.code === "ER_DUP_ENTRY") {
+            logger.error(`User with ID: ${request.user.id} ALREADY LIKED post with ID: ${request.params.id}`);
+            response
+                .status(HttpStatusCode.BAD_REQUEST)
+                .send(makeResponse(false, "Already Liked", null, "alredy liked"));
+        }
+        return;
+    }
 
     logger.info(`User with ID: ${request.user.id} LIKED post with ID: ${request.params.id}`);
     response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Liked", like));
 };
-/* 
-// *UnLike
-export const unlike = async (request: Request, response: Response  ): Promise<void> => {
-    await db("likes").where({ post_id: request.params.id, user_id: request.user.id }).del();
+
+/**
+ *  Unlike a post
+ * */
+export const unlike = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+
+    await postService.unlike({ user: request.user.id, post: request.params.id });
 
     logger.info(`${request.user.id} UNLIKED post: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).end();
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Unliked"));
 };
 
-// *Comment
-export const comment = async (request: Request, response: Response  ): Promise<void> => {
-    request.body.post_id = request.params.id;
-    request.body.user_id = request.user.id;
-    const id: number = await db("comments").insert(request.body);
+/**
+ *  Comment on post
+ * */
+export const comment = async (request: Request, response: Response): Promise<void> => {
+    let filePath = null;
+    if (request.file) {
+        filePath = request.file.path.replace(/\\/g, "/");
+    }
 
-    logger.info(`${request.user.id} COMMENTED on ${request.params.id}, commId: ${id}`, request.body);
-    response.status(HttpStatusCode.CREATED).send(id);
+    const postService = new PostService();
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+    let comment: any = {
+        message: request.body.message,
+        mediaUrl: filePath,
+        user: {
+            id: request.user.id,
+        },
+        post: {
+            id: request.params.id,
+        },
+        tagTo: {
+            id: request.body.tagTo,
+        },
+    };
+
+    comment = await postService.comment(comment);
+
+    logger.info(`User with ID:${request.user.id} COMMENTED on ${request.params.id}, commId: ${comment.id}`, comment);
+    response.status(HttpStatusCode.CREATED).send(makeResponse(true, "commented sccessfully", comment));
 };
 
-// *All Comment on a post
-export const getAllComm = async (request: Request, response: Response  ): Promise<void> => {
-    const comms = await db("comments").where({ post_id: request.params.id });
+/**
+ *  All comment on a post
+ * */
+export const allComments = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+
+    const comms = await postService.getAllcomment(+request.params.id);
 
     logger.info(`All comment on postID: ${request.params.id}`);
-    response.status(HttpStatusCode.OK).send(comms);
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "all comments of post fetched successfully", comms));
 };
- */
