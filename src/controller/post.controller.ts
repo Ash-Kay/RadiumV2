@@ -83,23 +83,18 @@ export const one = async (request: Request, response: Response): Promise<void> =
  * */
 export const remove = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
-    const post = await postService.findAndLoadUser(+request.params.id);
 
-    if (post === undefined) {
-        logger.info("Post NOT found");
-        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "Post not found!", null, "POST NOT FOUND"));
-        return;
-    } else if (post.user.id !== request.user.id) {
-        logger.error(`AUTH FAILED: ${request.user.id} tried to delete ${post.user.id}'s post, Post ID: ${post.id}`);
+    const result = await postService.softDelete(+request.params.id, request.user.id);
+
+    if (result.raw.changedRows === 0) {
+        logger.info("Post NOT found, or Not Authorized", result);
         response
-            .status(HttpStatusCode.UNAUTHORIZED)
-            .send(makeResponse(false, "Error Deleting Post!", null, "Error deleting post"));
+            .status(HttpStatusCode.NOT_FOUND)
+            .send(makeResponse(false, "Error Deleting Post", null, "Error Deleting Post"));
         return;
     }
 
-    await postService.softDelete(+request.params.id);
-
-    logger.info(`Post removed with ID: ${request.params.id}`);
+    logger.info(`Post removed with ID: ${request.params.id} by user with ID: ${request.user.id}`);
     response.send(makeResponse(true, "Post deleted"));
 };
 

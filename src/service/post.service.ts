@@ -2,6 +2,7 @@ import { Post } from "../entity/post.entity";
 import { Like } from "../entity/like.entity";
 import { Comment } from "../entity/comment.entity";
 import { getRepository, Repository, UpdateResult, DeleteResult } from "typeorm";
+import { SoftDeleteQueryBuilder } from "typeorm/query-builder/SoftDeleteQueryBuilder";
 
 export class PostService {
     postRepository: Repository<Post>;
@@ -73,8 +74,13 @@ export class PostService {
      * @param id
      * @returns UpdateResult
      */
-    softDelete(id: number): Promise<UpdateResult> {
-        return this.postRepository.softDelete(id);
+    softDelete(id: number, userId: number): Promise<UpdateResult> {
+        return this.postRepository
+            .createQueryBuilder()
+            .softDelete()
+            .from(Post)
+            .where({ id, user: { id: userId } })
+            .execute();
     }
 
     /**

@@ -34,4 +34,9 @@ export const createComment = {
     tagTo: Joi.string().min(1),
 };
 
+export const updateComment = {
+    message: Joi.string().min(1).required(),
+    tagTo: Joi.string().min(1),
+};
+
 export const none = {};

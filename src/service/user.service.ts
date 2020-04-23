@@ -1,5 +1,5 @@
 import { User } from "../entity/user.entity";
-import { getRepository, Repository } from "typeorm";
+import { getRepository, Repository, UpdateResult } from "typeorm";
 
 export class UserService {
     userRepository: Repository<User>;
@@ -50,8 +50,8 @@ export class UserService {
      * @returns userDetails
      * @returns Updated User
      */
-    update(id: number, data: User): void {
-        this.userRepository.update(id, data);
+    update(id: number, data: User): Promise<UpdateResult> {
+        return this.userRepository.update(id, data);
     }
 
     /**
