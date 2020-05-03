@@ -1,148 +1,216 @@
-import { NextFunction, Request, Response } from "express";
+import { Response } from "express";
+import { Request } from "../interface/express.interface";
+import makeResponse from "../interface/response.interface";
 import { config } from "dotenv";
-import * as fs from "fs";
-import { db } from "../database/db";
-import HttpStatusCode from "../utils/error.enum";
+import HttpStatusCode from "../utils/httpStatusCode";
 import logger from "../utils/logger";
-import * as _ from "lodash";
-import Post from "../models/post.model";
+import fs from "fs";
 config();
 
-// *Create
-export const create = async (request: Request, response: Response, next: NextFunction) => {
+// Import Services
+import { PostService } from "../service/post.service";
+import { TagService } from "../service/tag.service";
+
+/**
+ *  Create post
+ * */
+export const create = async (request: Request, response: Response): Promise<void> => {
     if (!request.file) {
-        return response.status(HttpStatusCode.BAD_REQUEST).end();
-    }
-    const filterPost = _.pick(request.body, ["title", "adult"]);
-    _.assign(filterPost, { user_id: request.user.id }, { file_path: request.file.path.replace(/\\/g, "/") });
-
-    const id: number = await db("posts").insert(filterPost);
-
-    const tags = request.body.tags.map(tag => ({ tag_name: tag }));
-    const tag0Id = await db("tags").insert(tags);
-
-    const post_tag = [];
-    for (let i = tag0Id[0]; i < request.body.tags.length + tag0Id[0]; i++) {
-        post_tag.push({ post_id: id[0], tag_id: i });
+        response.status(HttpStatusCode.BAD_REQUEST).end(makeResponse(false, "No file found!!!", null, "NO_FILE_FOUND"));
+        return;
     }
 
-    const post_tag0Id: number[] = await db("post_tag").insert(post_tag);
+    const postService = new PostService();
+    const tagService = new TagService();
 
-    logger.info(`${request.body.user_id} CREATED post with id ${id}`, request.body);
-    response.status(HttpStatusCode.CREATED).send(id);
-};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let post: any = {
+        title: request.body.title,
+        sensitive: request.body.sensitive,
+        mediaUrl: request.file.path.replace(/\\/g, "/"),
+        user: {
+            id: request.user.id,
+        },
+    };
 
-// *GetFeed
-export const feed = async (request: Request, response: Response, next: NextFunction) => {
-    const posts: Post[] = await db
-        .select(
-            "posts.id",
-            "posts.user_id",
-            "posts.title",
-            "posts.file_path",
-            "posts.adult",
-            "posts.updated_at",
-            "posts.created_at",
-            "users.username",
-            "users.img_url as user_avatar"
-        )
-        .from("posts")
-        .leftJoin("users", "users.id", "posts.user_id")
-        .orderBy("created_at", "desc");
+    post = await postService.create(post);
 
-    logger.info("Feed Fetched");
-    response.status(HttpStatusCode.OK).send(posts);
-};
-
-// *Get Post
-export const one = async (request: Request, response: Response, next: NextFunction) => {
-    const [post]: Post[] = await db
-        .select(
-            "posts.id",
-            "posts.user_id",
-            "posts.title",
-            "posts.file_path",
-            "posts.adult",
-            "posts.updated_at",
-            "posts.created_at",
-            "users.username",
-            "users.img_url as user_avatar"
-        )
-        .from("posts")
-        .leftJoin("users", "users.id", "posts.user_id")
-        .where({ "posts.id": request.params.id });
-
-    if (post === undefined) {
-        logger.info("Post NOT found");
-        response.status(HttpStatusCode.NOT_FOUND).end();
-    } else {
-        logger.info(`Post fetched with id: ${post.id}`, post);
-        response.status(HttpStatusCode.OK).send(post);
-    }
-};
-
-// *Delete Post
-export const remove = async (request: Request, response: Response, next: NextFunction) => {
-    const post: Post = await db("posts")
-        .select()
-        .where({ id: request.params.id })
-        .first();
-
-    if (post === undefined) {
-        logger.info("Post NOT found");
-        return response.status(HttpStatusCode.NOT_FOUND).end();
-    } else if (post.user_id !== request.user.id) {
-        logger.error(`AUTH FAILED: ${request.user.id} tried to delete ${post.user_id}'s post, Post ID: ${post.id}`);
-        return response.status(HttpStatusCode.UNAUTHORIZED).end();
-    }
-
-    await db("posts")
-        .where({ id: request.params.id })
-        .del(); //return boolean 0 not deleted 1 deleted
-
-    fs.unlink(post.file_path, err => {
-        if (err) {
-            logger.error("File CANT be DELETED from fs", err);
-            response.status(HttpStatusCode.INTERNAL_SERVER_ERROR).end();
+    request.body.tags.forEach(async (tagText) => {
+        const tag = await tagService.getByText(tagText);
+        if (tag) {
+            tagService.linkPost(tag, post);
+            logger.info(`Added tag ID: ${tag.id} to post ID: ${post.id}`);
         } else {
-            logger.info("File DELETED from db and fs", post);
-            response.status(HttpStatusCode.OK).end();
+            const newTag = await tagService.create(tagText, post);
+            logger.info(`CREATED tag ${newTag.tagText} added to post with ID: ${post.id}`, newTag);
         }
     });
+
+    logger.info(`User with ID: ${post.user.id} CREATED post with ID: ${post.id}`, post);
+    response.status(HttpStatusCode.CREATED).send(makeResponse(true, "Post Created Sucessfully", post));
 };
 
-// *Like Post
-export const like = async (request: Request, response: Response, next: NextFunction) => {
-    await db("likes").insert({ post_id: request.params.id, user_id: request.user.id });
+/**
+ *  Get Feed
+ * */
+export const feed = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+    const posts = await postService.getFeed();
 
-    logger.info(`${request.user.id} LIKED post: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).end();
+    logger.info("Feed Fetched");
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Feed fetched sucessfully!", posts));
 };
 
-// *UnLike
-export const unlike = async (request: Request, response: Response, next: NextFunction) => {
-    await db("likes")
-        .where({ post_id: request.params.id, user_id: request.user.id })
-        .del();
+/**
+ *  Get one Post by ID
+ * */
+export const one = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+    const post = await postService.findAndLoadUser(+request.params.id);
+
+    if (post === undefined) {
+        logger.info("Post NOT found");
+        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "Post not found!", null, "POST NOT FOUND"));
+        return;
+    }
+
+    logger.info(`Post with ID: ${request.params.id} fetched`);
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Post fetched sucessfully!", post));
+};
+
+/**
+ *  Soft Delete a post
+ * */
+export const remove = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+
+    const result = await postService.softDelete(+request.params.id, request.user.id);
+
+    if (result.raw.changedRows === 0) {
+        logger.info("Post NOT found, or Not Authorized", result);
+        response
+            .status(HttpStatusCode.NOT_FOUND)
+            .send(makeResponse(false, "Error Deleting Post", null, "Error Deleting Post"));
+        return;
+    }
+
+    logger.info(`Post removed with ID: ${request.params.id} by user with ID: ${request.user.id}`);
+    response.send(makeResponse(true, "Post deleted"));
+};
+
+/**
+ *  Permanently deletes a post
+ * */
+export const permenentRemove = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+    const post = await postService.findWithSoftDeleted(+request.params.id);
+
+    if (post === undefined) {
+        logger.info("Post NOT found");
+        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "Post not found!", null, "POST NOT FOUND"));
+        return;
+    }
+
+    await postService.permaDelete(+request.params.id);
+
+    fs.unlink(post.mediaUrl, (err) => {
+        if (err) {
+            logger.error("File CANT be DELETED from fs", err);
+            response
+                .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+                .send(makeResponse(false, "Error Deleting Post!", null, "Error deleting post"));
+            return;
+        }
+    });
+
+    logger.info("File DELETED from db and fs", post);
+    response.send(makeResponse(true, "Post deleted Permanently"));
+};
+
+/**
+ *  Like a post
+ * */
+export const like = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+    let like: any = {
+        user: {
+            id: request.user.id,
+        },
+        post: {
+            id: request.params.id,
+        },
+    };
+
+    try {
+        like = await postService.like(like);
+    } catch (e) {
+        if (e.code === "ER_DUP_ENTRY") {
+            logger.error(`User with ID: ${request.user.id} ALREADY LIKED post with ID: ${request.params.id}`);
+            response
+                .status(HttpStatusCode.BAD_REQUEST)
+                .send(makeResponse(false, "Already Liked", null, "alredy liked"));
+        }
+        return;
+    }
+
+    logger.info(`User with ID: ${request.user.id} LIKED post with ID: ${request.params.id}`);
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Liked", like));
+};
+
+/**
+ *  Unlike a post
+ * */
+export const unlike = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+
+    await postService.unlike({ user: request.user.id, post: request.params.id });
 
     logger.info(`${request.user.id} UNLIKED post: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).end();
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Unliked"));
 };
 
-// *Comment
-export const comment = async (request: Request, response: Response, next: NextFunction) => {
-    request.body.post_id = request.params.id;
-    request.body.user_id = request.user.id;
-    const id: number = await db("comments").insert(request.body);
+/**
+ *  Comment on post
+ * */
+export const comment = async (request: Request, response: Response): Promise<void> => {
+    let filePath = null;
+    if (request.file) {
+        filePath = request.file.path.replace(/\\/g, "/");
+    }
 
-    logger.info(`${request.user.id} COMMENTED on ${request.params.id}, commId: ${id}`, request.body);
-    response.status(HttpStatusCode.CREATED).send(id);
+    const postService = new PostService();
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+    let comment: any = {
+        message: request.body.message,
+        mediaUrl: filePath,
+        user: {
+            id: request.user.id,
+        },
+        post: {
+            id: request.params.id,
+        },
+        tagTo: {
+            id: request.body.tagTo,
+        },
+    };
+
+    comment = await postService.comment(comment);
+
+    logger.info(`User with ID:${request.user.id} COMMENTED on ${request.params.id}, commId: ${comment.id}`, comment);
+    response.status(HttpStatusCode.CREATED).send(makeResponse(true, "commented sccessfully", comment));
 };
 
-// *All Comment on a post
-export const getAllComm = async (request: Request, response: Response, next: NextFunction) => {
-    const comms = await db("comments").where({ post_id: request.params.id });
+/**
+ *  All comment on a post
+ * */
+export const allComments = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+
+    const comms = await postService.getAllcomment(+request.params.id);
 
     logger.info(`All comment on postID: ${request.params.id}`);
-    response.status(HttpStatusCode.OK).send(comms);
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "all comments of post fetched successfully", comms));
 };

@@ -1,30 +1,36 @@
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import logger from "../utils/logger";
-import HttpStatusCode from "../utils/error.enum";
+import { NextFunction, Response } from "express";
+import HttpStatusCode from "../utils/httpStatusCode";
+import { Request } from "../interface/express.interface";
 
-export const verifyAuth = (req, res, next) => {
+export const verifyAuth = (request: Request, response: Response, next: NextFunction): void => {
     try {
-        const token = req.headers.authorization.split(" ")[1];
+        const token = request.headers.authorization.split(" ")[1];
         const user = jwt.verify(token, process.env.JWT_KEY);
         //save (decoded)user for future use
-        req.user = user;
+        request.user = user;
         next();
     } catch (e) {
         logger.error("JWT token INVALID");
-        logger.warn("JWT token " + req.headers.authorization.split(" ")[1]);
-        return res.status(HttpStatusCode.UNAUTHORIZED).end();
+        logger.warn("JWT token " + request.headers.authorization.split(" ")[1]);
+        return response.status(HttpStatusCode.BAD_REQUEST).end();
     }
 };
 
-export const verifyAuthorization = (req, res, next) => {
+/**
+ * Verifies if User have right permission
+ * verifyAuth must be present before this route
+ * */
+export const verifyAuthorization = (request: Request, response: Response, next: NextFunction): void => {
     try {
-        if (req.user.type !== "god") {
+        if (request.user.role !== "ADMIN") {
             logger.error("Not Authorized");
-            return res.status(HttpStatusCode.UNAUTHORIZED).end();
+            return response.status(HttpStatusCode.UNAUTHORIZED).end();
         }
         next();
     } catch (e) {
         logger.error("JWT token INVALID");
-        return res.status(HttpStatusCode.UNAUTHORIZED).end();
+        return response.status(HttpStatusCode.UNAUTHORIZED).end();
     }
 };
