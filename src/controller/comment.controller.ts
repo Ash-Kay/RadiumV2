@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { Request } from "../interface/express.interface";
-import makeResponse from "../interface/response.interface";
+import { makeResponse } from "../interface/response.interface";
 import { config } from "dotenv";
 import HttpStatusCode from "../utils/httpStatusCode";
 import logger from "../utils/logger";

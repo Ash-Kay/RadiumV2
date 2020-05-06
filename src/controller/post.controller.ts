@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { Request } from "../interface/express.interface";
-import makeResponse from "../interface/response.interface";
+import { makeResponse, makeApiResponse } from "../interface/response.interface";
 import { config } from "dotenv";
 import HttpStatusCode from "../utils/httpStatusCode";
 import logger from "../utils/logger";
@@ -55,10 +55,23 @@ export const create = async (request: Request, response: Response): Promise<void
  * */
 export const feed = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
-    const posts = await postService.getFeed();
+    const page = +request.params.page;
+
+    const posts = await postService.getFeed((page - 1) * 5, 5);
+    console.log("skip", +request.params.page * 5, "take", 5);
 
     logger.info("Feed Fetched");
-    response.status(HttpStatusCode.OK).send(makeResponse(true, "Feed fetched sucessfully!", posts));
+    response
+        .status(HttpStatusCode.OK)
+        .send(
+            makeApiResponse(
+                true,
+                "Feed fetched sucessfully!",
+                request.baseUrl + "/" + (page - 1),
+                request.baseUrl + "/" + (page + 1),
+                posts
+            )
+        );
 };
 
 /**

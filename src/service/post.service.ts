@@ -1,7 +1,7 @@
 import { Post } from "../entity/post.entity";
 import { Like } from "../entity/like.entity";
 import { Comment } from "../entity/comment.entity";
-import { getRepository, Repository, UpdateResult, DeleteResult } from "typeorm";
+import { getRepository, Repository, UpdateResult, DeleteResult, SelectQueryBuilder } from "typeorm";
 import { SoftDeleteQueryBuilder } from "typeorm/query-builder/SoftDeleteQueryBuilder";
 
 export class PostService {
@@ -28,11 +28,14 @@ export class PostService {
      * Fetches posts
      * @returns List of Postss
      */
-    getFeed(): Promise<Post[]> {
+    getFeed(skip: number, take: number): Promise<Post[]> {
         const posts = this.postRepository.find({
+            skip,
+            take,
             order: {
                 createdAt: "DESC",
             },
+            relations: ["user"],
         });
         return posts;
     }

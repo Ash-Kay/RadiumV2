@@ -41,7 +41,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, limits, fileFilter });
 
 router.post("/", verifyAuth, upload.single("file"), validate(schema.createPost), PostController.create);
-router.get("/", PostController.feed);
+router.get("/:page", PostController.feed);
 router.get("/:id", PostController.one);
 router.delete("/:id", verifyAuth, PostController.remove);
 router.delete("/:id/permenent", verifyAuth, verifyAuthorization, PostController.permenentRemove);
