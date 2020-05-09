@@ -44,12 +44,19 @@ createConnection().then(() => {
     app.listen(process.env.PORT || 3000, () => {
         console.log(`\n\n\n
         ${kleur.magenta(app.get("env").toUpperCase())}  
-        ${kleur.magenta(`API       → http://localhost:${process.env.PORT + process.env.BASE_URL}`)}
+        
+        ${kleur.magenta(
+            `API       → http://localhost:${
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                process.env.PORT! + process.env.BASE_URL
+            }`
+        )}
         `);
 
         logger.info(
             `${app.get("env").toUpperCase()} server started at http://localhost:${
-                process.env.PORT + process.env.BASE_URL
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                process.env.PORT! + process.env.BASE_URL
             }`
         );
     });

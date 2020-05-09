@@ -6,14 +6,14 @@ import { Request } from "../interface/express.interface";
 
 export const verifyAuth = (request: Request, response: Response, next: NextFunction): void => {
     try {
-        const token = request.headers.authorization.split(" ")[1];
+        const token = request.headers.authorization?.split(" ")[1];
         const user = jwt.verify(token, process.env.JWT_KEY);
         //save (decoded)user for future use
         request.user = user;
         next();
     } catch (e) {
         logger.error("JWT token INVALID");
-        logger.warn("JWT token " + request.headers.authorization.split(" ")[1]);
+        logger.warn("JWT token " + request.headers.authorization?.split(" ")[1]);
         return response.status(HttpStatusCode.BAD_REQUEST).end();
     }
 };

@@ -13,7 +13,7 @@ export class CommentService {
      * @param id
      * @returns comment
      */
-    find(id: number): Promise<Comment> {
+    find(id: number): Promise<Comment | undefined> {
         return this.commentRepository.findOne(id);
     }
 
@@ -22,7 +22,7 @@ export class CommentService {
      * @param id
      * @returns comment
      */
-    findWithSoftDeleted(id: number): Promise<Comment> {
+    findWithSoftDeleted(id: number): Promise<Comment | undefined> {
         return this.commentRepository.findOne(id, { withDeleted: true });
     }
 

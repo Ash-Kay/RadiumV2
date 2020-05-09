@@ -29,7 +29,7 @@ export class UserService {
      * @param email
      * @returns Found User
      */
-    findByEmail(email: string): Promise<User> {
+    findByEmail(email: string): Promise<User | undefined> {
         return this.userRepository.findOne({
             where: { email },
         });
@@ -40,7 +40,7 @@ export class UserService {
      * @param id
      * @returns Found User
      */
-    findById(id: number): Promise<User> {
+    findById(id: number): Promise<User | undefined> {
         return this.userRepository.findOne(id);
     }
 
@@ -50,7 +50,7 @@ export class UserService {
      * @returns userDetails
      * @returns Updated User
      */
-    update(id: number, data: User): Promise<UpdateResult> {
+    update(id: number, data: User): Promise<UpdateResult | undefined> {
         return this.userRepository.update(id, data);
     }
 
@@ -59,7 +59,7 @@ export class UserService {
      * @param id
      * @returns User with post inside
      */
-    loadUserWithPosts(id: number): Promise<User> {
+    loadUserWithPosts(id: number): Promise<User | undefined> {
         return this.userRepository.findOne(id, { relations: ["posts"] });
     }
 }

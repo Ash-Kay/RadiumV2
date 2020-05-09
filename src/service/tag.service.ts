@@ -28,7 +28,7 @@ export class TagService {
      * @returns found Tag Entity
      */
     async getByText(tagText: string): Promise<Tag | undefined> {
-        const tag: Tag = await this.tagRepository.findOne({
+        const tag = await this.tagRepository.findOne({
             where: { tagText: tagText },
         });
 

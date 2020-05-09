@@ -41,7 +41,7 @@ export const signup = async (request: Request, response: Response): Promise<void
         response.status(HttpStatusCode.CREATED).send(makeResponse(true, "User registered successfully", filteredUser));
     } catch (err) {
         logger.error(`${request.body.email} ERROR in registration`, err);
-        response.status(HttpStatusCode.BAD_REQUEST).send(makeResponse(false, "Error", null, "FAILED_TO_REGISTER"));
+        response.status(HttpStatusCode.BAD_REQUEST).send(makeResponse(false, "Error", {}, "FAILED_TO_REGISTER"));
     }
 };
 
@@ -57,7 +57,7 @@ export const login = async (request: Request, response: Response): Promise<void>
         logger.info(`AUTH FAILED: ${request.body.email}'s password does't match`);
         response
             .status(HttpStatusCode.BAD_REQUEST)
-            .send(makeResponse(false, "Email and password does't match", null, "FAILED_TO_LOGIN"));
+            .send(makeResponse(false, "Email and password does't match", {}, "FAILED_TO_LOGIN"));
         return;
     }
 
@@ -77,7 +77,7 @@ export const login = async (request: Request, response: Response): Promise<void>
         logger.info(`AUTH FAILED: ${request.user.email}'s password does't match`);
         response
             .status(HttpStatusCode.BAD_REQUEST)
-            .send(makeResponse(false, "Email and password does't match", null, "FAILED_TO_LOGIN"));
+            .send(makeResponse(false, "Email and password does't match", {}, "FAILED_TO_LOGIN"));
         return;
     }
 
@@ -94,7 +94,7 @@ export const one = async (request: Request, response: Response): Promise<void> =
 
     if (user === undefined) {
         logger.info(`User not found with ID :${request.params.id}`);
-        response.status(HttpStatusCode.OK).send(makeResponse(false, "No such user found", null, "USER NOT FOUND"));
+        response.status(HttpStatusCode.OK).send(makeResponse(false, "No such user found", {}, "USER NOT FOUND"));
         return;
     }
 
@@ -111,7 +111,7 @@ export const update = async (request: Request, response: Response): Promise<void
     await userService.update(request.user.id, request.body);
 
     logger.info(`User with ID: ${request.user.id}' UPDATED`);
-    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "User updated successfully"));
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "User updated successfully", {}));
 };
 
 /**
@@ -123,7 +123,7 @@ export const posts = async (request: Request, response: Response): Promise<void>
 
     if (user == undefined) {
         logger.info(`Tried to fetch post of unexisting with ID :${request.params.id}`);
-        response.status(HttpStatusCode.OK).send(makeResponse(false, "No such user found", null, "USER NOT FOUND"));
+        response.status(HttpStatusCode.OK).send(makeResponse(false, "No such user found", {}, "USER NOT FOUND"));
         return;
     }
     logger.info(`${request.params.id}'s ALL post fetched`);

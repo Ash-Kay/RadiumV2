@@ -11,7 +11,8 @@ config();
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, process.env.UPLOAD_PATH);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        cb(null, process.env.UPLOAD_PATH!);
     },
     filename: (req, file, cb) => {
         const radomFileName =

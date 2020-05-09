@@ -1,8 +1,7 @@
 import { Post } from "../entity/post.entity";
 import { Like } from "../entity/like.entity";
 import { Comment } from "../entity/comment.entity";
-import { getRepository, Repository, UpdateResult, DeleteResult, SelectQueryBuilder } from "typeorm";
-import { SoftDeleteQueryBuilder } from "typeorm/query-builder/SoftDeleteQueryBuilder";
+import { getRepository, Repository, UpdateResult, DeleteResult } from "typeorm";
 
 export class PostService {
     postRepository: Repository<Post>;
@@ -45,7 +44,7 @@ export class PostService {
      * @param id
      * @returns post
      */
-    find(id: number): Promise<Post> {
+    find(id: number): Promise<Post | undefined> {
         return this.postRepository.findOne(id);
     }
 
@@ -54,7 +53,7 @@ export class PostService {
      * @param id
      * @returns post
      */
-    findWithSoftDeleted(id: number): Promise<Post> {
+    findWithSoftDeleted(id: number): Promise<Post | undefined> {
         return this.postRepository.findOne(id, { withDeleted: true });
     }
 
@@ -63,7 +62,7 @@ export class PostService {
      * @param id
      * @returns post with user inside
      */
-    findAndLoadUser(id: number): Promise<Post> {
+    findAndLoadUser(id: number): Promise<Post | undefined> {
         return this.postRepository
             .createQueryBuilder("post")
             .where("post.id = :id", { id })

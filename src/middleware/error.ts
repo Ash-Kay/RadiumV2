@@ -8,5 +8,5 @@ export const error = (error, request: Request, response: Response, next: NextFun
     logger.error("from middle", error.message, error.stack);
     response
         .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
-        .send(makeResponse(false, "Something went wrong!!!", null, "WTF"));
+        .send(makeResponse(false, "Something went wrong!!!", {}, "WTF"));
 };

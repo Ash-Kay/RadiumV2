@@ -20,7 +20,7 @@ export const one = async (request: Request, response: Response): Promise<void> =
 
     if (comm === undefined) {
         logger.info("Comment NOT found");
-        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "commnet not found", null, "CMT NOT FUND"));
+        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "commnet not found", {}, "CMT NOT FUND"));
         return;
     }
 
@@ -40,12 +40,12 @@ export const remove = async (request: Request, response: Response): Promise<void
         logger.info("Comment NOT found, or Not Authorized", result);
         response
             .status(HttpStatusCode.NOT_FOUND)
-            .send(makeResponse(false, "Error Deleting Comment", null, "Error Deleting Comment"));
+            .send(makeResponse(false, "Error Deleting Comment", {}, "Error Deleting Comment"));
         return;
     }
 
     logger.info(`Comment removed with ID: ${request.params.id} by user with ID: ${request.user.id}`);
-    response.send(makeResponse(true, "Comment deleted"));
+    response.send(makeResponse(true, "Comment deleted", {}));
 };
 
 /**
@@ -60,7 +60,7 @@ export const permenentRemove = async (request: Request, response: Response): Pro
         logger.info("Comment NOT found");
         response
             .status(HttpStatusCode.NOT_FOUND)
-            .send(makeResponse(false, "Comment not found!", null, "Comment NOT FOUND"));
+            .send(makeResponse(false, "Comment not found!", {}, "Comment NOT FOUND"));
         return;
     }
 
@@ -72,13 +72,13 @@ export const permenentRemove = async (request: Request, response: Response): Pro
                 logger.error("File CANT be DELETED from fs", err);
                 response
                     .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
-                    .send(makeResponse(false, "Error Deleting Comment!", null, "Error deleting Comment"));
+                    .send(makeResponse(false, "Error Deleting Comment!", {}, "Error deleting Comment"));
                 return;
             }
         });
 
     logger.info("File DELETED from db and fs", comment);
-    response.send(makeResponse(true, "Comment deleted Permanently"));
+    response.send(makeResponse(true, "Comment deleted Permanently", {}));
 };
 
 /**
@@ -93,10 +93,10 @@ export const edit = async (request: Request, response: Response): Promise<void> 
         logger.info("Comment NOT found, or Not Authorized", result);
         response
             .status(HttpStatusCode.NOT_FOUND)
-            .send(makeResponse(false, "Error Editing Comment", null, "Error Editing Comment"));
+            .send(makeResponse(false, "Error Editing Comment", {}, "Error Editing Comment"));
         return;
     }
 
     logger.info(`User with ID: ${request.user.id}' UPDATED comment with ID: `);
-    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment updated successfully"));
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment updated successfully", {}));
 };

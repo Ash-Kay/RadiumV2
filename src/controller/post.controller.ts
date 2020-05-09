@@ -16,7 +16,7 @@ import { TagService } from "../service/tag.service";
  * */
 export const create = async (request: Request, response: Response): Promise<void> => {
     if (!request.file) {
-        response.status(HttpStatusCode.BAD_REQUEST).end(makeResponse(false, "No file found!!!", null, "NO_FILE_FOUND"));
+        response.status(HttpStatusCode.BAD_REQUEST).end(makeResponse(false, "No file found!!!", {}, "NO_FILE_FOUND"));
         return;
     }
 
@@ -82,7 +82,7 @@ export const one = async (request: Request, response: Response): Promise<void> =
 
     if (post === undefined) {
         logger.info("Post NOT found");
-        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "Post not found!", null, "POST NOT FOUND"));
+        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "Post not found!", {}, "POST NOT FOUND"));
         return;
     }
 
@@ -102,12 +102,12 @@ export const remove = async (request: Request, response: Response): Promise<void
         logger.info("Post NOT found, or Not Authorized", result);
         response
             .status(HttpStatusCode.NOT_FOUND)
-            .send(makeResponse(false, "Error Deleting Post", null, "Error Deleting Post"));
+            .send(makeResponse(false, "Error Deleting Post", {}, "Error Deleting Post"));
         return;
     }
 
     logger.info(`Post removed with ID: ${request.params.id} by user with ID: ${request.user.id}`);
-    response.send(makeResponse(true, "Post deleted"));
+    response.send(makeResponse(true, "Post deleted", {}));
 };
 
 /**
@@ -119,7 +119,7 @@ export const permenentRemove = async (request: Request, response: Response): Pro
 
     if (post === undefined) {
         logger.info("Post NOT found");
-        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "Post not found!", null, "POST NOT FOUND"));
+        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "Post not found!", {}, "POST NOT FOUND"));
         return;
     }
 
@@ -130,13 +130,13 @@ export const permenentRemove = async (request: Request, response: Response): Pro
             logger.error("File CANT be DELETED from fs", err);
             response
                 .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
-                .send(makeResponse(false, "Error Deleting Post!", null, "Error deleting post"));
+                .send(makeResponse(false, "Error Deleting Post!", {}, "Error deleting post"));
             return;
         }
     });
 
     logger.info("File DELETED from db and fs", post);
-    response.send(makeResponse(true, "Post deleted Permanently"));
+    response.send(makeResponse(true, "Post deleted Permanently", {}));
 };
 
 /**
@@ -160,9 +160,7 @@ export const like = async (request: Request, response: Response): Promise<void> 
     } catch (e) {
         if (e.code === "ER_DUP_ENTRY") {
             logger.error(`User with ID: ${request.user.id} ALREADY LIKED post with ID: ${request.params.id}`);
-            response
-                .status(HttpStatusCode.BAD_REQUEST)
-                .send(makeResponse(false, "Already Liked", null, "alredy liked"));
+            response.status(HttpStatusCode.BAD_REQUEST).send(makeResponse(false, "Already Liked", {}, "alredy liked"));
         }
         return;
     }
@@ -180,14 +178,14 @@ export const unlike = async (request: Request, response: Response): Promise<void
     await postService.unlike({ user: request.user.id, post: request.params.id });
 
     logger.info(`${request.user.id} UNLIKED post: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Unliked"));
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Unliked", {}));
 };
 
 /**
  *  Comment on post
  * */
 export const comment = async (request: Request, response: Response): Promise<void> => {
-    let filePath = null;
+    let filePath;
     if (request.file) {
         filePath = request.file.path.replace(/\\/g, "/");
     }
