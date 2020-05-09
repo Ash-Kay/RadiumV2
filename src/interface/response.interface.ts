@@ -20,7 +20,7 @@ export const makeResponse = (success: boolean, message?: string, data?: object, 
     return response;
 };
 
-export const makeApiResponse = (
+export const makePaginationResponse = (
     success: boolean,
     message?: string,
     previousPage?: string,
