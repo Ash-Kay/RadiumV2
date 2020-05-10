@@ -55,7 +55,7 @@ export const create = async (request: Request, response: Response): Promise<void
  * */
 export const feed = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
-    const page = +request.params.page;
+    const page = +request.query.page;
 
     const posts = await postService.getFeed((page - 1) * 5, 5);
 
