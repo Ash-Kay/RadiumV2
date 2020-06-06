@@ -29,7 +29,7 @@ const limits = {
 };
 
 const fileFilter = (req, file, cb) => {
-    const allowedMimes = ["image/jpeg", "image/pjpeg", "image/png", "image/gif"];
+    const allowedMimes = ["image/jpeg", "image/pjpeg", "image/png", "image/gif", "video/mp4", "video/webm"];
 
     if (allowedMimes.includes(file.mimetype)) {
         cb(null, true);
