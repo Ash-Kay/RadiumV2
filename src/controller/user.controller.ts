@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { Request } from "../interface/express.interface";
 import { makeResponse } from "../interface/response.interface";
-import { UserToken } from "../interface/model.interfacet";
+import { UserToken } from "../interface/model.interface";
 import HttpStatusCode from "../utils/httpStatusCode";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";

@@ -52,4 +52,16 @@ export class Post {
     })
     @JoinTable({ name: "post_tag" })
     tags: Tag[];
+
+    @Column({ unsigned: true })
+    width: number;
+
+    @Column({ unsigned: true })
+    height: number;
+
+    @Column()
+    aspectRatio: string;
+
+    @Column()
+    mime: string;
 }

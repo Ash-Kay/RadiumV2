@@ -1,3 +1,7 @@
+import { config } from "dotenv";
+import ffmpeg from "fluent-ffmpeg";
+import mime from "mime/lite";
+config();
 import { Post } from "../entity/post.entity";
 import { Like } from "../entity/like.entity";
 import { Comment } from "../entity/comment.entity";
@@ -12,6 +16,9 @@ export class PostService {
         this.postRepository = getRepository(Post);
         this.likeRepository = getRepository(Like);
         this.commentRepository = getRepository(Comment);
+
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        ffmpeg.setFfprobePath(process.env.FF_PATH!);
     }
 
     /**
@@ -19,8 +26,9 @@ export class PostService {
      * @param Post data
      * @returns Post entity
      */
-    create(data: Post): Promise<Post> {
-        return this.postRepository.save(data);
+    async create(data: Post): Promise<Post> {
+        const data1: Post = await this.generatePostMeta(data);
+        return this.postRepository.save(data1);
     }
 
     /**
@@ -128,5 +136,29 @@ export class PostService {
      */
     getAllcomment(id: number): Promise<Comment[]> {
         return this.commentRepository.find({ where: [{ post: { id } }] });
+    }
+
+    /**
+     * Adds metadata to postfeed before saving
+     * @param post
+     * @returns post with metadata
+     */
+    generatePostMeta(post: Post): Promise<Post> {
+        return new Promise((resolve, reject) => {
+            ffmpeg.ffprobe(post.mediaUrl, function (err, metadata) {
+                if (err) {
+                    reject(err);
+                } else {
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    post.width = metadata.streams[0].width!;
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    post.height = metadata.streams[0].height!;
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    post.aspectRatio = metadata.streams[0].display_aspect_ratio!;
+                    post.mime = mime.getType(post.mediaUrl);
+                }
+                resolve(post);
+            });
+        });
     }
 }
