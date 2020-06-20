@@ -45,6 +45,17 @@ export class UserService {
     }
 
     /**
+     * Find user by ID
+     * @param id
+     * @returns Found User
+     */
+    findByGoogleId(googleId: string): Promise<User | undefined> {
+        return this.userRepository.findOne({
+            where: { googleId },
+        });
+    }
+
+    /**
      * Update user by finding with ID
      * @param id
      * @returns userDetails

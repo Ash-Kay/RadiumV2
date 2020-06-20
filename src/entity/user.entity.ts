@@ -21,13 +21,16 @@ export class User {
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;
 
+    @Column({ nullable: true })
+    googleId: string;
+
     @Column({ length: 30 })
     username: string;
 
     @Column({ length: 100 })
     email: string;
 
-    @Column()
+    @Column({ nullable: true })
     password: string;
 
     @Column({ nullable: true })

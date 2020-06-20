@@ -12,6 +12,8 @@ config();
 
 // Import Services
 import { UserService } from "../service/user.service";
+import { Profile } from "passport";
+import { User } from "../entity/user.entity";
 
 /**
  *  Get all users
@@ -82,7 +84,48 @@ export const login = async (request: Request, response: Response): Promise<void>
     }
 
     logger.info(`${request.body.email}' LOGGED in`);
-    response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", token));
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", { token }));
+};
+
+/**
+ *
+ * */
+export const googleAuth = async (profile: Profile): Promise<void> => {
+    const userService = new UserService();
+    let user: any = await userService.findByGoogleId(profile.id);
+    if (user === undefined) {
+        user = {
+            googleId: profile.id,
+            email: profile.emails![0].value,
+            username: profile.displayName.replace(/ /g, "") + Math.floor(Math.random() * 100),
+            firsName: profile.name!.givenName,
+            lastName: profile.name!.familyName,
+            avatarUrl: profile.photos![0].value,
+        };
+        await userService.create(user);
+    }
+
+    user = await userService.findByGoogleId(profile.id);
+
+    const tokenUserDetails: UserToken = {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        username: user.username,
+    };
+    const token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
+        expiresIn: "7d",
+    });
+
+    return token;
+};
+
+/**
+ *
+ * */
+export const googleRedirect = async (request: Request, response: Response): Promise<void> => {
+    logger.info(`${request.body.email}' LOGGED in`);
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", { token: request.token }));
 };
 
 /**

@@ -3,4 +3,5 @@ import { UserToken } from "./model.interface";
 
 export interface Request extends ExpressRequest {
     user: UserToken;
+    token: string | null;
 }

@@ -19,10 +19,12 @@ import postRouter from "./routes/post.route";
 import commRouter from "./routes/comment.route";
 
 import { createConnection } from "typeorm";
+import passport from "passport";
 config();
 const app = express();
 
 createConnection().then(() => {
+    app.use(passport.initialize({ userProperty: "token" }));
     app.use(handle.limit);
     app.use(helmet());
     app.use(cors());
