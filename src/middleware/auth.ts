@@ -2,11 +2,11 @@ import jwt from "jsonwebtoken";
 import logger from "../utils/logger";
 import { NextFunction, Response } from "express";
 import HttpStatusCode from "../utils/httpStatusCode";
-import { Request } from "../interface/express.interface";
+import { Request, AuthHeaderRequest } from "../interface/express.interface";
 
-export const verifyAuth = (request: Request, response: Response, next: NextFunction): void => {
+export const verifyAuth = (request: AuthHeaderRequest, response: Response, next: NextFunction): void => {
     try {
-        const token = request.headers.authorization?.split(" ")[1];
+        const token = request.headers.authorization.split(" ")[1];
         const user = jwt.verify(token, process.env.JWT_KEY);
         //save (decoded)user for future use
         request.user = user;

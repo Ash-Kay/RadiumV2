@@ -1,7 +1,8 @@
 import { Response } from "express";
-import { Request } from "../interface/express.interface";
+import { Request, AuthHeaderRequest } from "../interface/express.interface";
 import { makeResponse } from "../interface/response.interface";
 import { UserToken } from "../interface/model.interface";
+import { OAuth2Client } from "google-auth-library";
 import HttpStatusCode from "../utils/httpStatusCode";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -13,7 +14,6 @@ config();
 // Import Services
 import { UserService } from "../service/user.service";
 import { Profile } from "passport";
-import { User } from "../entity/user.entity";
 
 /**
  *  Get all users
@@ -54,7 +54,6 @@ export const login = async (request: Request, response: Response): Promise<void>
     const userService = new UserService();
     const user = await userService.findByEmail(request.body.email);
 
-    console.log("user", user);
     if (user === undefined) {
         logger.info(`AUTH FAILED: ${request.body.email}'s password does't match`);
         response
@@ -71,6 +70,7 @@ export const login = async (request: Request, response: Response): Promise<void>
             email: user.email,
             role: user.role,
             username: user.username,
+            googleId: user.googleId,
         };
         token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
             expiresIn: "7d",
@@ -88,16 +88,63 @@ export const login = async (request: Request, response: Response): Promise<void>
 };
 
 /**
- *
+ *  GoogleSignup, Takes google token and create or find existing user then returns token
  * */
-export const googleAuth = async (profile: Profile): Promise<void> => {
+export const googleSignupMobile = async (request: AuthHeaderRequest, response: Response): Promise<void> => {
+    const userService = new UserService();
+    const googleToken = request.headers.authorization.split(" ")[1];
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const ticket = await client.verifyIdToken({ idToken: googleToken });
+    const payload = ticket.getPayload();
+
+    let token;
+    if (payload !== undefined) {
+        let user = await userService.findByGoogleId(payload.sub);
+
+        if (user === undefined) {
+            const newUser: any = {
+                googleId: payload.sub,
+                email: payload.email,
+                username: payload.name!.replace(/ /g, "") + Math.floor(Math.random() * 1000),
+                firsName: payload.given_name,
+                lastName: payload.family_name,
+                avatarUrl: payload.picture,
+            };
+            user = await userService.create(newUser);
+        }
+
+        const tokenUserDetails: UserToken = {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            username: user.username,
+            googleId: user.googleId,
+        };
+        token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
+            expiresIn: "7d",
+        });
+
+        console.log("token", token);
+
+        logger.info(`${user.email}' LOGGED in`);
+        response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", { token }));
+    } else {
+        logger.error(`Google Login Payload UNDEFINED!`);
+        response.status(HttpStatusCode.UNAUTHORIZED).send(makeResponse(false, "Login Failed", {}));
+    }
+};
+
+/**
+ *  Takes google profile id and returns token
+ * */
+export const googleAuthWeb = async (profile: Profile): Promise<void> => {
     const userService = new UserService();
     let user: any = await userService.findByGoogleId(profile.id);
     if (user === undefined) {
         user = {
             googleId: profile.id,
             email: profile.emails![0].value,
-            username: profile.displayName.replace(/ /g, "") + Math.floor(Math.random() * 100),
+            username: profile.displayName.replace(/ /g, "") + Math.floor(Math.random() * 1000),
             firsName: profile.name!.givenName,
             lastName: profile.name!.familyName,
             avatarUrl: profile.photos![0].value,
@@ -112,6 +159,7 @@ export const googleAuth = async (profile: Profile): Promise<void> => {
         email: user.email,
         role: user.role,
         username: user.username,
+        googleId: user.googleId,
     };
     const token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
         expiresIn: "7d",
@@ -121,7 +169,7 @@ export const googleAuth = async (profile: Profile): Promise<void> => {
 };
 
 /**
- *
+ *  This runs when google web auth successful
  * */
 export const googleRedirect = async (request: Request, response: Response): Promise<void> => {
     logger.info(`${request.body.email}' LOGGED in`);

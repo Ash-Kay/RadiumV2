@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as PostController from "../controller/post.controller";
-import { validate } from "../validator/validator";
+import { validateRequest } from "../validator/validator";
 import * as schema from "../validator/schema";
 const router = Router();
 import multer from "multer";
@@ -11,8 +11,7 @@ config();
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        cb(null, process.env.UPLOAD_PATH!);
+        cb(null, process.env.UPLOAD_PATH);
     },
     filename: (req, file, cb) => {
         const radomFileName =
@@ -28,7 +27,7 @@ const limits = {
     fileSize: 52428800,
 };
 
-const fileFilter = (req, file, cb) => {
+const fileFilter = (req, file, cb): void => {
     const allowedMimes = ["image/jpeg", "image/pjpeg", "image/png", "image/gif", "video/mp4", "video/webm"];
 
     if (allowedMimes.includes(file.mimetype)) {
@@ -41,14 +40,20 @@ const fileFilter = (req, file, cb) => {
 // file size 50MB= 1024*1024*50 = 52428800
 const upload = multer({ storage, limits, fileFilter });
 
-router.post("/", verifyAuth, upload.single("file"), validate(schema.createPost), PostController.create);
+router.post("/", verifyAuth, upload.single("file"), validateRequest(schema.createPost), PostController.create);
 router.get("/", PostController.feed);
 router.get("/:id", PostController.one);
 router.delete("/:id", verifyAuth, PostController.remove);
 router.delete("/:id/permenent", verifyAuth, verifyAuthorization, PostController.permenentRemove);
 router.post("/:id/like", verifyAuth, PostController.like);
 router.delete("/:id/unlike", verifyAuth, PostController.unlike);
-router.post("/:id/comment", verifyAuth, upload.single("file"), validate(schema.createComment), PostController.comment);
+router.post(
+    "/:id/comment",
+    verifyAuth,
+    upload.single("file"),
+    validateRequest(schema.createComment),
+    PostController.comment
+);
 router.get("/:id/comment", PostController.allComments);
 
 export default router;

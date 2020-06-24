@@ -40,3 +40,17 @@ export const updateComment = {
 };
 
 export const none = {};
+
+/**
+ *  Objects
+ * */
+
+export const googleTokenPayload = {
+    googleId: Joi.string().required(),
+    name: Joi.string().required(),
+    email: Joi.string().required(),
+    username: Joi.string().required(),
+    firsName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    avatarUrl: Joi.string().required(),
+};

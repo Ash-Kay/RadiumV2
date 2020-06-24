@@ -5,3 +5,9 @@ export interface Request extends ExpressRequest {
     user: UserToken;
     token: string | null;
 }
+
+export interface AuthHeaderRequest extends Request {
+    headers: {
+        authorization: string;
+    };
+}

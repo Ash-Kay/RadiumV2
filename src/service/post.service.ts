@@ -17,8 +17,7 @@ export class PostService {
         this.likeRepository = getRepository(Like);
         this.commentRepository = getRepository(Comment);
 
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        ffmpeg.setFfprobePath(process.env.FF_PATH!);
+        ffmpeg.setFfprobePath(process.env.FF_PATH);
     }
 
     /**
