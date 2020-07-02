@@ -94,7 +94,13 @@ export const googleSignupMobile = async (request: AuthHeaderRequest, response: R
     const userService = new UserService();
     const googleToken = request.headers.authorization.split(" ")[1];
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-    const ticket = await client.verifyIdToken({ idToken: googleToken });
+    let ticket;
+    try {
+        ticket = await client.verifyIdToken({ idToken: googleToken });
+    } catch (e) {
+        logger.error(`Google Token verification failed`, e);
+        response.status(HttpStatusCode.UNAUTHORIZED).send(makeResponse(false, "Login Failed", {}));
+    }
     const payload = ticket.getPayload();
 
     let token;
@@ -123,8 +129,6 @@ export const googleSignupMobile = async (request: AuthHeaderRequest, response: R
         token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
             expiresIn: "7d",
         });
-
-        console.log("token", token);
 
         logger.info(`${user.email}' LOGGED in`);
         response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", { token }));

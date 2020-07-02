@@ -17,7 +17,7 @@ router.get(
     })
 );
 router.get("/auth/google/redirect", passport.authenticate("google", { session: false }), UserController.googleRedirect);
-router.get("/test", UserController.googleSignupMobile);
+router.get("/auth/google/mobile", UserController.googleSignupMobile);
 router.get("/:id", UserController.one);
 router.patch("/", verifyAuth, validateRequest(schema.userUpdate), UserController.update);
 router.get("/:id/posts", UserController.posts);

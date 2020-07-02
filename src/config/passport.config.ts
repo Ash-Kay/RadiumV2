@@ -12,7 +12,6 @@ passport.use(
             callbackURL: "http://localhost:3000/api/v1/users/google/redirect",
         },
         async (accessToken, refreshToken, profile, done) => {
-            console.log("profile", profile);
             const token = await googleAuthWeb(profile);
             done(undefined, token);
         }
