@@ -3,13 +3,20 @@ import { Request } from "../interface/express.interface";
 import { makeResponse, makePaginationResponse } from "../interface/response.interface";
 import { config } from "dotenv";
 import HttpStatusCode from "../utils/httpStatusCode";
+import TimeAgo from "javascript-time-ago";
+import en from "javascript-time-ago/locale/en";
 import logger from "../utils/logger";
+import _ from "lodash";
 import fs from "fs";
 config();
 
 // Import Services
 import { PostService } from "../service/post.service";
 import { TagService } from "../service/tag.service";
+
+// Config
+TimeAgo.addLocale(en);
+const timeAgo = new TimeAgo();
 
 /**
  *  Create post
@@ -56,8 +63,12 @@ export const create = async (request: Request, response: Response): Promise<void
 export const feed = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
     const page = +request.query.page;
+    const posts: any = await postService.getFeed((page - 1) * 5, 5);
 
-    const posts = await postService.getFeed((page - 1) * 5, 5);
+    posts.forEach((post) => {
+        (post.timeago = timeAgo.format(new Date(post.createdAt).getTime())), "twitter";
+        post.user = _.pick(post.user, ["id", "username", "avatarUrl"]);
+    });
 
     logger.info("Feed Fetched");
     response
