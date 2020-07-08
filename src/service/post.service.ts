@@ -49,7 +49,7 @@ export class PostService {
      * Fetches posts and also add isLiked parameter
      * @returns List of Posts
      */
-    getFeedWithLikes(userId: number, skip: number, take: number): any {
+    getFeedWithLikes(userId: number, skip: number, take: number): Promise<Post[]> {
         return this.postRepository.query(
             `
         SELECT op.*, users.username, users.avatarUrl, EXISTS(

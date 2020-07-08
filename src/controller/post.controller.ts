@@ -69,7 +69,7 @@ export const feed = async (request: Request, response: Response): Promise<void> 
 
         posts.forEach((post) => {
             (post.timeago = timeAgo.format(new Date(post.createdAt).getTime())), "twitter";
-            post.sensitive = Boolean(post.sensitive);
+            post.sensitive = Boolean(+post.sensitive);
         });
 
         logger.info("Feed Fetched");
@@ -85,13 +85,14 @@ export const feed = async (request: Request, response: Response): Promise<void> 
                 )
             );
     } else {
-        const posts = await postService.getFeedWithLikes(request.user.id, (page - 1) * 5, 5);
+        const posts: any = await postService.getFeedWithLikes(request.user.id, (page - 1) * 5, 5);
 
         posts.forEach((post) => {
             (post.timeago = timeAgo.format(new Date(post.createdAt).getTime())), "twitter";
             post.user = { id: post.userId, username: post.username, avatarUrl: post.avatarUrl };
-            post.isLiked = Boolean(post.isLiked);
-            post.sensitive = Boolean(post.sensitive);
+
+            post.isLiked = Boolean(+post.isLiked);
+            post.sensitive = Boolean(+post.sensitive);
 
             delete post.userId;
             delete post.username;
