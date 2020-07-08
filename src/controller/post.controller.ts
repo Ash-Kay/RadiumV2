@@ -63,25 +63,54 @@ export const create = async (request: Request, response: Response): Promise<void
 export const feed = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
     const page = +request.query.page;
-    const posts: any = await postService.getFeed((page - 1) * 5, 5);
 
-    posts.forEach((post) => {
-        (post.timeago = timeAgo.format(new Date(post.createdAt).getTime())), "twitter";
-        post.user = _.pick(post.user, ["id", "username", "avatarUrl"]);
-    });
+    if (request.user === undefined || request.user === null) {
+        const posts: any = await postService.getFeed((page - 1) * 5, 5);
 
-    logger.info("Feed Fetched");
-    response
-        .status(HttpStatusCode.OK)
-        .send(
-            makePaginationResponse(
-                true,
-                "Feed fetched sucessfully!",
-                request.baseUrl + "/" + (page - 1),
-                request.baseUrl + "/" + (page + 1),
-                posts
-            )
-        );
+        posts.forEach((post) => {
+            (post.timeago = timeAgo.format(new Date(post.createdAt).getTime())), "twitter";
+            post.sensitive = Boolean(post.sensitive);
+        });
+
+        logger.info("Feed Fetched");
+        response
+            .status(HttpStatusCode.OK)
+            .send(
+                makePaginationResponse(
+                    true,
+                    "Feed fetched sucessfully!",
+                    request.baseUrl + "/" + (page - 1),
+                    request.baseUrl + "/" + (page + 1),
+                    posts
+                )
+            );
+    } else {
+        const posts = await postService.getFeedWithLikes(request.user.id, (page - 1) * 5, 5);
+
+        posts.forEach((post) => {
+            (post.timeago = timeAgo.format(new Date(post.createdAt).getTime())), "twitter";
+            post.user = { id: post.userId, username: post.username, avatarUrl: post.avatarUrl };
+            post.isLiked = Boolean(post.isLiked);
+            post.sensitive = Boolean(post.sensitive);
+
+            delete post.userId;
+            delete post.username;
+            delete post.avatarUrl;
+        });
+
+        logger.info("Personalized Feed Fetched");
+        response
+            .status(HttpStatusCode.OK)
+            .send(
+                makePaginationResponse(
+                    true,
+                    "Feed fetched sucessfully!",
+                    request.baseUrl + "/" + (page - 1),
+                    request.baseUrl + "/" + (page + 1),
+                    posts
+                )
+            );
+    }
 };
 
 /**

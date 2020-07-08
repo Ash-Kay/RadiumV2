@@ -11,3 +11,9 @@ export interface AuthHeaderRequest extends Request {
         authorization: string;
     };
 }
+
+export interface OptionalAuthHeaderRequest extends Request {
+    headers: {
+        authorization?: string;
+    };
+}

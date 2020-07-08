@@ -35,15 +35,33 @@ export class PostService {
      * @returns List of Postss
      */
     getFeed(skip: number, take: number): Promise<Post[]> {
-        const posts = this.postRepository.find({
-            skip,
-            take,
-            order: {
-                createdAt: "DESC",
-            },
-            relations: ["user"],
-        });
-        return posts;
+        return this.postRepository
+            .createQueryBuilder("post")
+            .orderBy("post.createdAt", "DESC")
+            .skip(skip)
+            .take(take)
+            .innerJoin("post.user", "user")
+            .addSelect(["user.id", "user.username", "user.avatarUrl"])
+            .getMany();
+    }
+
+    /**
+     * Fetches posts and also add isLiked parameter
+     * @returns List of Posts
+     */
+    getFeedWithLikes(userId: number, skip: number, take: number): any {
+        return this.postRepository.query(
+            `
+        SELECT op.*, users.username, users.avatarUrl, EXISTS(
+            SELECT * FROM likes
+                INNER JOIN users ON users.id = likes.userId
+                INNER JOIN posts ON posts.id = likes.postId
+                WHERE users.id =? AND posts.id = op.id
+                    ) AS isLiked FROM posts op
+        INNER JOIN users ON users.id = op.userId
+        ORDER BY op.createdAt DESC LIMIT ?, ?;`,
+            [userId, skip, take]
+        );
     }
 
     /**

@@ -5,7 +5,7 @@ import * as schema from "../validator/schema";
 const router = Router();
 import multer from "multer";
 import { config } from "dotenv";
-import { verifyAuth, verifyAuthorization } from "../middleware/auth";
+import { verifyAuth, verifyAuthorization, verifyOptionalAuth } from "../middleware/auth";
 import crypto from "crypto";
 config();
 
@@ -41,7 +41,7 @@ const fileFilter = (req, file, cb): void => {
 const upload = multer({ storage, limits, fileFilter });
 
 router.post("/", verifyAuth, upload.single("file"), validateRequest(schema.createPost), PostController.create);
-router.get("/", PostController.feed);
+router.get("/", verifyOptionalAuth, PostController.feed);
 router.get("/:id", PostController.one);
 router.delete("/:id", verifyAuth, PostController.remove);
 router.delete("/:id/permenent", verifyAuth, verifyAuthorization, PostController.permenentRemove);

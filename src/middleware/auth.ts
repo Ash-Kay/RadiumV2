@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import logger from "../utils/logger";
 import { NextFunction, Response } from "express";
 import HttpStatusCode from "../utils/httpStatusCode";
-import { Request, AuthHeaderRequest } from "../interface/express.interface";
+import { Request, AuthHeaderRequest, OptionalAuthHeaderRequest } from "../interface/express.interface";
 
 export const verifyAuth = (request: AuthHeaderRequest, response: Response, next: NextFunction): void => {
     try {
@@ -10,6 +10,26 @@ export const verifyAuth = (request: AuthHeaderRequest, response: Response, next:
         const user = jwt.verify(token, process.env.JWT_KEY);
         //save (decoded)user for future use
         request.user = user;
+        next();
+    } catch (e) {
+        logger.error("JWT token INVALID");
+        logger.warn("JWT token " + request.headers.authorization?.split(" ")[1]);
+        return response.status(HttpStatusCode.BAD_REQUEST).end();
+    }
+};
+
+export const verifyOptionalAuth = (
+    request: OptionalAuthHeaderRequest,
+    response: Response,
+    next: NextFunction
+): void => {
+    try {
+        if (request.headers.authorization !== null && request.headers.authorization !== undefined) {
+            const token = request.headers.authorization.split(" ")[1];
+            const user = jwt.verify(token, process.env.JWT_KEY);
+            //save (decoded)user for future use
+            request.user = user;
+        }
         next();
     } catch (e) {
         logger.error("JWT token INVALID");

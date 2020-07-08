@@ -7,7 +7,7 @@ module.exports = {
     password: "ashish",
     database: "testdb",
     synchronize: true,
-    logging: false,
+    logging: ["query", "error"],
     entities: ["src/entity/**/*.ts"],
     migrations: ["src/migration/**/*.ts"],
     subscribers: ["src/subscriber/**/*.ts"],
