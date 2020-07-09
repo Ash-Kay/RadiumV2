@@ -1,4 +1,4 @@
-import { Role } from "./role.enum";
+import { Role } from "./db.enum";
 
 export interface UserToken {
     email: string;

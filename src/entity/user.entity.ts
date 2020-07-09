@@ -11,8 +11,8 @@ import {
 
 import { Post } from "./post.entity";
 import { Comment } from "./comment.entity";
-import { Like } from "./like.entity";
-import { Role } from "../interface/role.enum";
+import { Vote } from "./vote.entity";
+import { Role } from "../interface/db.enum";
 
 @Entity("users")
 @Unique(["username"])
@@ -72,6 +72,6 @@ export class User {
     @OneToMany(() => Comment, (comment) => comment.user)
     comments: Comment[];
 
-    @OneToMany(() => Like, (like) => like.user)
-    likes: Like[];
+    @OneToMany(() => Vote, (vote) => vote.user)
+    votes: Vote[];
 }

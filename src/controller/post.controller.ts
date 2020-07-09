@@ -3,6 +3,7 @@ import { Request } from "../interface/express.interface";
 import { makeResponse, makePaginationResponse } from "../interface/response.interface";
 import { config } from "dotenv";
 import HttpStatusCode from "../utils/httpStatusCode";
+import { VoteState } from "../interface/db.enum";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
 import logger from "../utils/logger";
@@ -85,13 +86,13 @@ export const feed = async (request: Request, response: Response): Promise<void> 
                 )
             );
     } else {
-        const posts: any = await postService.getFeedWithLikes(request.user.id, (page - 1) * 5, 5);
+        const posts: any = await postService.getFeedWithVotes(request.user.id, (page - 1) * 5, 5);
 
         posts.forEach((post) => {
             (post.timeago = timeAgo.format(new Date(post.createdAt).getTime())), "twitter";
             post.user = { id: post.userId, username: post.username, avatarUrl: post.avatarUrl };
 
-            post.isLiked = Boolean(+post.isLiked);
+            post.vote = +post.vote;
             post.sensitive = Boolean(+post.sensitive);
 
             delete post.userId;
@@ -181,45 +182,99 @@ export const permenentRemove = async (request: Request, response: Response): Pro
 };
 
 /**
- *  Like a post
+ *  Upvote a post
  * */
-export const like = async (request: Request, response: Response): Promise<void> => {
+export const upvote = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-    let like: any = {
+    let upvote: any = {
         user: {
             id: request.user.id,
         },
         post: {
             id: request.params.id,
         },
+        vote: VoteState.UPVOTE,
     };
 
     try {
-        like = await postService.like(like);
+        await postService.removeVote({ user: upvote.user, post: upvote.post });
+        upvote = await postService.vote(upvote);
     } catch (e) {
         if (e.code === "ER_DUP_ENTRY") {
-            logger.error(`User with ID: ${request.user.id} ALREADY LIKED post with ID: ${request.params.id}`);
-            response.status(HttpStatusCode.BAD_REQUEST).send(makeResponse(false, "Already Liked", {}, "alredy liked"));
+            logger.error(`User with ID: ${request.user.id} ALREADY UPVOTED post with ID: ${request.params.id}`);
+            response
+                .status(HttpStatusCode.BAD_REQUEST)
+                .send(makeResponse(false, "Already Upvoted", {}, "alredy upvoted"));
+        } else {
+            logger.error(
+                `ERROR! when User with ID: ${request.user.id} tried UPVOTE post with ID: ${request.params.id}`,
+                e
+            );
+            response
+                .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+                .send(makeResponse(false, "Something went wrong", {}, "Something went wrong"));
         }
         return;
     }
 
-    logger.info(`User with ID: ${request.user.id} LIKED post with ID: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Liked", like));
+    logger.info(`User with ID: ${request.user.id} UPVOTED post with ID: ${request.params.id}`);
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Upvoted", upvote));
 };
 
 /**
- *  Unlike a post
+ *  Remove vote of post
  * */
-export const unlike = async (request: Request, response: Response): Promise<void> => {
+export const removeVote = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
 
-    await postService.unlike({ user: request.user.id, post: request.params.id });
+    await postService.removeVote({ user: request.user.id, post: request.params.id });
 
-    logger.info(`${request.user.id} UNLIKED post: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Unliked", {}));
+    logger.info(`${request.user.id} REMOVE VOTE post: ${request.params.id}`);
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post vote Removed", {}));
+};
+
+/**
+ *  Downvote a post
+ * */
+export const downvote = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+    let downvote: any = {
+        user: {
+            id: request.user.id,
+        },
+        post: {
+            id: request.params.id,
+        },
+        vote: VoteState.DOWNVOTE,
+    };
+
+    try {
+        await postService.removeVote({ user: downvote.user, post: downvote.post });
+        downvote = await postService.vote(downvote);
+    } catch (e) {
+        if (e.code === "ER_DUP_ENTRY") {
+            logger.error(`User with ID: ${request.user.id} ALREADY DOWNVOTED post with ID: ${request.params.id}`);
+            response
+                .status(HttpStatusCode.BAD_REQUEST)
+                .send(makeResponse(false, "Already Downvoted", {}, "alredy downvoted"));
+        } else {
+            logger.error(
+                `ERROR! when User with ID: ${request.user.id} tried DOWNVOTE post with ID: ${request.params.id}`,
+                e
+            );
+            response
+                .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+                .send(makeResponse(false, "Something went wrong", {}, "Something went wrong"));
+        }
+        return;
+    }
+
+    logger.info(`User with ID: ${request.user.id} DOWNVOTED post with ID: ${request.params.id}`);
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Downvoted", downvote));
 };
 
 /**

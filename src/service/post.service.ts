@@ -3,18 +3,18 @@ import ffmpeg from "fluent-ffmpeg";
 import mime from "mime/lite";
 config();
 import { Post } from "../entity/post.entity";
-import { Like } from "../entity/like.entity";
+import { Vote } from "../entity/vote.entity";
 import { Comment } from "../entity/comment.entity";
 import { getRepository, Repository, UpdateResult, DeleteResult } from "typeorm";
 
 export class PostService {
     postRepository: Repository<Post>;
-    likeRepository: Repository<Like>;
+    voteRepository: Repository<Vote>;
     commentRepository: Repository<Comment>;
 
     constructor() {
         this.postRepository = getRepository(Post);
-        this.likeRepository = getRepository(Like);
+        this.voteRepository = getRepository(Vote);
         this.commentRepository = getRepository(Comment);
 
         ffmpeg.setFfprobePath(process.env.FF_PATH);
@@ -46,18 +46,19 @@ export class PostService {
     }
 
     /**
-     * Fetches posts and also add isLiked parameter
+     * Fetches posts and also add isUp/Downvoted parameter
      * @returns List of Posts
      */
-    getFeedWithLikes(userId: number, skip: number, take: number): Promise<Post[]> {
+    getFeedWithVotes(userId: number, skip: number, take: number): Promise<Post[]> {
         return this.postRepository.query(
             `
-        SELECT op.*, users.username, users.avatarUrl, EXISTS(
-            SELECT * FROM likes
-                INNER JOIN users ON users.id = likes.userId
-                INNER JOIN posts ON posts.id = likes.postId
-                WHERE users.id =? AND posts.id = op.id
-                    ) AS isLiked FROM posts op
+        SELECT op.*, users.username, users.avatarUrl, (
+            SELECT vote FROM votes
+            INNER JOIN users ON users.id = votes.userId
+            INNER JOIN posts ON posts.id = votes.postId
+            WHERE users.id =? AND posts.id = op.id
+        ) AS vote 
+        FROM posts op
         INNER JOIN users ON users.id = op.userId
         ORDER BY op.createdAt DESC LIMIT ?, ?;`,
             [userId, skip, take]
@@ -120,21 +121,21 @@ export class PostService {
     }
 
     /**
-     * Like
-     * @param id
-     * @returns Like entity
+     * Upvote
+     * @param {"user":id,"post":id,"vote":VOTE}
+     * @returns Upvote entity
      */
-    like(data: Like): Promise<Like> {
-        return this.likeRepository.save(data);
+    vote(data: object): Promise<Vote> {
+        return this.voteRepository.save(data);
     }
 
     /**
-     * Unlike
+     * Remove Upvote
      * @param {"user":id,"post":id}
      * @returns UpdateResult
      */
-    unlike(id: object): Promise<DeleteResult> {
-        return this.likeRepository.delete(id);
+    removeVote(data: object): Promise<DeleteResult> {
+        return this.voteRepository.delete(data);
     }
 
     /**

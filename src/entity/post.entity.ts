@@ -12,7 +12,7 @@ import {
 } from "typeorm";
 import { User } from "./user.entity";
 import { Comment } from "./comment.entity";
-import { Like } from "./like.entity";
+import { Vote } from "./vote.entity";
 import { Tag } from "./tag.entity";
 
 @Entity("posts")
@@ -44,8 +44,8 @@ export class Post {
     @OneToMany(() => Comment, (comment) => comment.post)
     comments: Comment[];
 
-    @OneToMany(() => Like, (like) => like.post)
-    likes: Like[];
+    @OneToMany(() => Vote, (vote) => vote.post)
+    vote: Vote[];
 
     @ManyToMany(() => Tag, (tags) => tags.posts, {
         cascade: ["insert", "update"],

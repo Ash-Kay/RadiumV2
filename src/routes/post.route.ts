@@ -45,8 +45,9 @@ router.get("/", verifyOptionalAuth, PostController.feed);
 router.get("/:id", PostController.one);
 router.delete("/:id", verifyAuth, PostController.remove);
 router.delete("/:id/permenent", verifyAuth, verifyAuthorization, PostController.permenentRemove);
-router.post("/:id/like", verifyAuth, PostController.like);
-router.delete("/:id/unlike", verifyAuth, PostController.unlike);
+router.post("/:id/upvote", verifyAuth, PostController.upvote);
+router.post("/:id/downvote", verifyAuth, PostController.downvote);
+router.delete("/:id/removevote", verifyAuth, PostController.removeVote);
 router.post(
     "/:id/comment",
     verifyAuth,
