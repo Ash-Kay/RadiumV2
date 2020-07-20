@@ -90,7 +90,7 @@ export const login = async (request: Request, response: Response): Promise<void>
 /**
  *  GoogleSignup, Takes google token and create or find existing user then returns token
  * */
-export const googleSignupMobile = async (request: AuthHeaderRequest, response: Response): Promise<void> => {
+export const loginWithGoogle = async (request: AuthHeaderRequest, response: Response): Promise<void> => {
     const userService = new UserService();
     const googleToken = request.headers.authorization.split(" ")[1];
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);

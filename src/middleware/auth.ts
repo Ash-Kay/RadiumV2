@@ -14,7 +14,7 @@ export const verifyAuth = (request: AuthHeaderRequest, response: Response, next:
     } catch (e) {
         logger.error("JWT token INVALID");
         logger.warn("JWT token " + request.headers.authorization?.split(" ")[1]);
-        return response.status(HttpStatusCode.BAD_REQUEST).end();
+        return response.status(HttpStatusCode.UNAUTHORIZED).end();
     }
 };
 
@@ -34,7 +34,7 @@ export const verifyOptionalAuth = (
     } catch (e) {
         logger.error("JWT token INVALID");
         logger.warn("JWT token " + request.headers.authorization?.split(" ")[1]);
-        return response.status(HttpStatusCode.BAD_REQUEST).end();
+        return response.status(HttpStatusCode.UNAUTHORIZED).end();
     }
 };
 
