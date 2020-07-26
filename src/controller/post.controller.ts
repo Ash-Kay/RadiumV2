@@ -43,7 +43,7 @@ export const create = async (request: Request, response: Response): Promise<void
 
     post = await postService.create(post);
 
-    request.body.tags.forEach(async (tagText) => {
+    request.body.tags?.forEach(async (tagText) => {
         const tag = await tagService.getByText(tagText);
         if (tag) {
             tagService.linkPost(tag, post);
@@ -315,7 +315,11 @@ export const comment = async (request: Request, response: Response): Promise<voi
 export const allComments = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
 
-    const comms = await postService.getAllcomment(+request.params.id);
+    const comms: any = await postService.getAllcomment(+request.params.id);
+
+    comms.forEach((comm) => {
+        (comm.timeago = timeAgo.format(new Date(comm.createdAt).getTime())), "twitter";
+    });
 
     logger.info(`All comment on postID: ${request.params.id}`);
     response.status(HttpStatusCode.OK).send(makeResponse(true, "all comments of post fetched successfully", comms));

@@ -8,9 +8,11 @@ import {
     DeleteDateColumn,
     OneToOne,
     JoinColumn,
+    OneToMany,
 } from "typeorm";
 import { User } from "./user.entity";
 import { Post } from "./post.entity";
+import { CVote } from "./cvote.entity";
 
 @Entity("comments")
 export class Comment {
@@ -22,6 +24,9 @@ export class Comment {
 
     @Column({ nullable: true })
     mediaUrl: string;
+
+    @OneToMany(() => CVote, (vote) => vote.comment)
+    vote: CVote[];
 
     @CreateDateColumn({ type: "timestamp" })
     createdAt: Date;

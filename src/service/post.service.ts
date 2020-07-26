@@ -153,7 +153,12 @@ export class PostService {
      * @returns all comments
      */
     getAllcomment(id: number): Promise<Comment[]> {
-        return this.commentRepository.find({ where: [{ post: { id } }] });
+        return this.commentRepository
+            .createQueryBuilder("comment")
+            .innerJoin("comment.user", "user")
+            .addSelect(["user.id", "user.username", "user.avatarUrl"])
+            .where({ post: { id } })
+            .getMany();
     }
 
     /**
