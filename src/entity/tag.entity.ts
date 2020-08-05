@@ -8,10 +8,11 @@ import {
     DeleteDateColumn,
 } from "typeorm";
 import { Post } from "./post.entity";
+import ITag from "../models/tag.model";
 
 @Entity("tags")
 @Unique(["tagText"])
-export class Tag {
+export class Tag implements ITag {
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;
 

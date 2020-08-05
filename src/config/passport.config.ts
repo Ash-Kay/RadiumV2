@@ -13,7 +13,7 @@ passport.use(
         },
         async (accessToken, refreshToken, profile, done) => {
             const token = await googleAuthWeb(profile);
-            done(undefined, token);
+            if (token !== undefined) done(undefined, token);
         }
     )
 );

@@ -14,9 +14,10 @@ import { User } from "./user.entity";
 import { Comment } from "./comment.entity";
 import { Vote } from "./vote.entity";
 import { Tag } from "./tag.entity";
+import IPost from "../models/post.model";
 
 @Entity("posts")
-export class Post {
+export class Post implements IPost {
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;
 

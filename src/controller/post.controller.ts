@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { Request } from "../interface/express.interface";
 import { makeResponse, makePaginationResponse } from "../interface/response.interface";
+import { RecursivePartial } from "../interface/utilsTypes";
 import { config } from "dotenv";
 import HttpStatusCode from "../utils/httpStatusCode";
 import { VoteState } from "../interface/db.enum";
@@ -10,6 +11,11 @@ import logger from "../utils/logger";
 import _ from "lodash";
 import fs from "fs";
 config();
+
+//Entities
+import { Post } from "../entity/post.entity";
+import { Vote } from "../entity/vote.entity";
+import { Comment } from "../entity/comment.entity";
 
 // Import Services
 import { PostService } from "../service/post.service";
@@ -31,8 +37,7 @@ export const create = async (request: Request, response: Response): Promise<void
     const postService = new PostService();
     const tagService = new TagService();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let post: any = {
+    let post: RecursivePartial<Post> = {
         title: request.body.title,
         sensitive: request.body.sensitive,
         mediaUrl: request.file.path.replace(/\\/g, "/"),
@@ -54,7 +59,7 @@ export const create = async (request: Request, response: Response): Promise<void
         }
     });
 
-    logger.info(`User with ID: ${post.user.id} CREATED post with ID: ${post.id}`, post);
+    logger.info(`User with ID: ${post?.user?.id} CREATED post with ID: ${post.id}`, post);
     response.status(HttpStatusCode.CREATED).send(makeResponse(true, "Post Created Sucessfully", post));
 };
 
@@ -66,12 +71,14 @@ export const feed = async (request: Request, response: Response): Promise<void> 
     const page = +request.query.page;
 
     if (request.user === undefined || request.user === null) {
-        const posts: any = await postService.getFeed((page - 1) * 5, 5);
+        const rawPosts = await postService.getFeed((page - 1) * 5, 5);
 
-        posts.forEach((post) => {
-            (post.timeago = timeAgo.format(new Date(post.createdAt).getTime())), "twitter";
-            post.sensitive = Boolean(+post.sensitive);
-        });
+        const posts = _.map(rawPosts, (e) =>
+            _.assign(e, {
+                timeago: timeAgo.format(new Date(e.createdAt).getTime(), "twitter"),
+                sensitive: Boolean(+e.sensitive),
+            })
+        );
 
         logger.info("Feed Fetched");
         response
@@ -86,19 +93,19 @@ export const feed = async (request: Request, response: Response): Promise<void> 
                 )
             );
     } else {
-        const posts: any = await postService.getFeedWithVotes(request.user.id, (page - 1) * 5, 5);
+        const rawPosts = await postService.getFeedWithVotes(request.user.id, (page - 1) * 5, 5);
 
-        posts.forEach((post) => {
-            (post.timeago = timeAgo.format(new Date(post.createdAt).getTime())), "twitter";
-            post.user = { id: post.userId, username: post.username, avatarUrl: post.avatarUrl };
-
-            post.vote = +post.vote;
-            post.sensitive = Boolean(+post.sensitive);
-
-            delete post.userId;
-            delete post.username;
-            delete post.avatarUrl;
-        });
+        const posts = _.chain(rawPosts)
+            .map((e) =>
+                _.assign(e, {
+                    timeago: timeAgo.format(new Date(e.createdAt).getTime(), "twitter"),
+                    user: { id: e.userId, username: e.username, avatarUrl: e.avatarUrl },
+                    sensitive: Boolean(+e.sensitive),
+                    vote: +e.vote,
+                })
+            )
+            .map((e) => _.omit(e, ["userId", "username", "avatarUrl"]))
+            .value();
 
         logger.info("Personalized Feed Fetched");
         response
@@ -187,13 +194,12 @@ export const permenentRemove = async (request: Request, response: Response): Pro
 export const upvote = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-    let upvote: any = {
+    let upvote: RecursivePartial<Vote> = {
         user: {
             id: request.user.id,
         },
         post: {
-            id: request.params.id,
+            id: +request.params.id,
         },
         vote: VoteState.UPVOTE,
     };
@@ -241,13 +247,12 @@ export const removeVote = async (request: Request, response: Response): Promise<
 export const downvote = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-    let downvote: any = {
+    let downvote: RecursivePartial<Vote> = {
         user: {
             id: request.user.id,
         },
         post: {
-            id: request.params.id,
+            id: +request.params.id,
         },
         vote: VoteState.DOWNVOTE,
     };
@@ -288,15 +293,14 @@ export const comment = async (request: Request, response: Response): Promise<voi
 
     const postService = new PostService();
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-    let comment: any = {
+    let comment: RecursivePartial<Comment> = {
         message: request.body.message,
         mediaUrl: filePath,
         user: {
             id: request.user.id,
         },
         post: {
-            id: request.params.id,
+            id: +request.params.id,
         },
         tagTo: {
             id: request.body.tagTo,
@@ -315,11 +319,13 @@ export const comment = async (request: Request, response: Response): Promise<voi
 export const allComments = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
 
-    const comms: any = await postService.getAllcomment(+request.params.id);
+    const rawComms: Comment[] = await postService.getAllcomment(+request.params.id);
 
-    comms.forEach((comm) => {
-        (comm.timeago = timeAgo.format(new Date(comm.createdAt).getTime())), "twitter";
-    });
+    const comms = _.map(rawComms, (e) =>
+        _.assign(e, {
+            timeago: timeAgo.format(new Date(e.createdAt).getTime(), "twitter"),
+        })
+    );
 
     logger.info(`All comment on postID: ${request.params.id}`);
     response.status(HttpStatusCode.OK).send(makeResponse(true, "all comments of post fetched successfully", comms));

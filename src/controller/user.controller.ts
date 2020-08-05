@@ -4,6 +4,7 @@ import { makeResponse } from "../interface/response.interface";
 import { UserToken } from "../interface/model.interface";
 import { OAuth2Client } from "google-auth-library";
 import HttpStatusCode from "../utils/httpStatusCode";
+import { Profile } from "passport";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { config } from "dotenv";
@@ -13,7 +14,7 @@ config();
 
 // Import Services
 import { UserService } from "../service/user.service";
-import { Profile } from "passport";
+import { User } from "../entity/user.entity";
 
 /**
  *  Get all users
@@ -71,12 +72,13 @@ export const login = async (request: Request, response: Response): Promise<void>
             role: user.role,
             username: user.username,
             googleId: user.googleId,
+            avatarUrl: user.avatarUrl,
         };
         token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
             expiresIn: "7d",
         });
     } else {
-        logger.info(`AUTH FAILED: ${request.user.email}'s password does't match`);
+        logger.info(`AUTH FAILED: ${request.body.email}'s password does't match`);
         response
             .status(HttpStatusCode.BAD_REQUEST)
             .send(makeResponse(false, "Email and password does't match", {}, "FAILED_TO_LOGIN"));
@@ -108,10 +110,10 @@ export const loginWithGoogle = async (request: AuthHeaderRequest, response: Resp
         let user = await userService.findByGoogleId(payload.sub);
 
         if (user === undefined) {
-            const newUser: any = {
+            const newUser: Partial<User> = {
                 googleId: payload.sub,
                 email: payload.email,
-                username: payload.name!.replace(/ /g, "") + Math.floor(Math.random() * 1000),
+                username: payload.name.replace(/ /g, "") + Math.floor(Math.random() * 1000),
                 firsName: payload.given_name,
                 lastName: payload.family_name,
                 avatarUrl: payload.picture,
@@ -125,6 +127,7 @@ export const loginWithGoogle = async (request: AuthHeaderRequest, response: Resp
             role: user.role,
             username: user.username,
             googleId: user.googleId,
+            avatarUrl: user.avatarUrl,
         };
         token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
             expiresIn: "7d",
@@ -143,11 +146,12 @@ export const loginWithGoogle = async (request: AuthHeaderRequest, response: Resp
  * */
 export const googleAuthWeb = async (profile: Profile): Promise<void> => {
     const userService = new UserService();
-    let user: any = await userService.findByGoogleId(profile.id);
+    let user: Partial<User | undefined> = await userService.findByGoogleId(profile.id);
     if (user === undefined) {
         user = {
             googleId: profile.id,
             email: profile.emails![0].value,
+            //Todo find better method to genrate random name
             username: profile.displayName.replace(/ /g, "") + Math.floor(Math.random() * 1000),
             firsName: profile.name!.givenName,
             lastName: profile.name!.familyName,
@@ -156,20 +160,26 @@ export const googleAuthWeb = async (profile: Profile): Promise<void> => {
         await userService.create(user);
     }
 
-    user = await userService.findByGoogleId(profile.id);
+    const savedUser = await userService.findByGoogleId(profile.id);
 
-    const tokenUserDetails: UserToken = {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        username: user.username,
-        googleId: user.googleId,
-    };
-    const token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
-        expiresIn: "7d",
-    });
+    if (savedUser !== undefined) {
+        const tokenUserDetails: UserToken = {
+            id: savedUser.id,
+            email: savedUser.email,
+            role: savedUser.role,
+            username: savedUser.username,
+            googleId: savedUser.googleId,
+            avatarUrl: savedUser.avatarUrl,
+        };
+        const token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
+            expiresIn: "7d",
+        });
 
-    return token;
+        return token;
+    } else {
+        logger.error("Unable to find saved User or create new User!!!");
+        return undefined;
+    }
 };
 
 /**

@@ -8,16 +8,16 @@ import {
     Unique,
     DeleteDateColumn,
 } from "typeorm";
-
 import { Post } from "./post.entity";
 import { Comment } from "./comment.entity";
 import { Vote } from "./vote.entity";
 import { Role } from "../interface/db.enum";
+import IUser from "../models/user.model";
 
 @Entity("users")
 @Unique(["username"])
 @Unique(["email"])
-export class User {
+export class User implements IUser {
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;
 

@@ -6,6 +6,8 @@ import { Post } from "../entity/post.entity";
 import { Vote } from "../entity/vote.entity";
 import { Comment } from "../entity/comment.entity";
 import { getRepository, Repository, UpdateResult, DeleteResult } from "typeorm";
+import { RecursivePartial } from "../interface/utilsTypes";
+import { PostWithUserVote } from "../interface/model.interface";
 
 export class PostService {
     postRepository: Repository<Post>;
@@ -25,8 +27,8 @@ export class PostService {
      * @param Post data
      * @returns Post entity
      */
-    async create(data: Post): Promise<Post> {
-        const data1: Post = await this.generatePostMeta(data);
+    async create(data: RecursivePartial<Post>): Promise<Post> {
+        const data1: Post = await this.generatePostMeta(data as Post);
         return this.postRepository.save(data1);
     }
 
@@ -49,7 +51,7 @@ export class PostService {
      * Fetches posts and also add isUp/Downvoted parameter
      * @returns List of Posts
      */
-    getFeedWithVotes(userId: number, skip: number, take: number): Promise<Post[]> {
+    getFeedWithVotes(userId: number, skip: number, take: number): Promise<PostWithUserVote[]> {
         return this.postRepository.query(
             `
         SELECT op.*, users.username, users.avatarUrl, (
@@ -143,8 +145,8 @@ export class PostService {
      * @param Comment data
      * @returns Comment Entity
      */
-    comment(data: Comment): Promise<Comment> {
-        return this.commentRepository.save(data);
+    comment(data: RecursivePartial<Comment>): Promise<Comment> {
+        return this.commentRepository.save(data as Comment);
     }
 
     /**

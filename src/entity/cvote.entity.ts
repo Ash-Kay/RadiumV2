@@ -2,9 +2,10 @@ import { Entity, CreateDateColumn, ManyToOne, UpdateDateColumn, DeleteDateColumn
 import { User } from "./user.entity";
 import { Comment } from "./comment.entity";
 import { VoteState } from "../interface/db.enum";
+import ICVote from "../models/cvote.model";
 
 @Entity("cvotes")
-export class CVote {
+export class CVote implements ICVote {
     @ManyToOne(() => User, (user) => user.votes, { primary: true, nullable: false })
     user: User;
 

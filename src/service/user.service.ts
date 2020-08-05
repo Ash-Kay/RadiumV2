@@ -20,7 +20,7 @@ export class UserService {
      * @param User
      * @returns Created User
      */
-    create(data: User): Promise<User> {
+    create(data: Partial<User>): Promise<User> {
         return this.userRepository.save(data);
     }
 

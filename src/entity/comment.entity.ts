@@ -13,9 +13,10 @@ import {
 import { User } from "./user.entity";
 import { Post } from "./post.entity";
 import { CVote } from "./cvote.entity";
+import IComment from "../models/comment.model";
 
 @Entity("comments")
-export class Comment {
+export class Comment implements IComment {
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;
 
