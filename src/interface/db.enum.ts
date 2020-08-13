@@ -4,6 +4,6 @@ export enum Role {
 }
 
 export enum VoteState {
-    UPVOTE = "+1",
-    DOWNVOTE = "-1",
+    UPVOTE = +1,
+    DOWNVOTE = -1,
 }

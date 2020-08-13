@@ -43,6 +43,7 @@ const upload = multer({ storage, limits, fileFilter });
 router.post("/", verifyAuth, upload.single("file"), validateRequest(schema.createPost), PostController.create);
 router.get("/", verifyOptionalAuth, PostController.feed);
 router.get("/:id", PostController.one);
+router.get("/:id/vote", PostController.countVote);
 router.delete("/:id", verifyAuth, PostController.remove);
 router.delete("/:id/permenent", verifyAuth, verifyAuthorization, PostController.permenentRemove);
 router.post("/:id/upvote", verifyAuth, PostController.upvote);

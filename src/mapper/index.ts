@@ -1,3 +1,0 @@
-const SqltoPostFeedWithAuth = () => {
-    console.log("");
-};

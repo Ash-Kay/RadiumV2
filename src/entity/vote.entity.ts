@@ -1,5 +1,4 @@
 import { Entity, CreateDateColumn, ManyToOne, UpdateDateColumn, DeleteDateColumn, Column } from "typeorm";
-import { VoteState } from "../interface/db.enum";
 import { User } from "./user.entity";
 import { Post } from "./post.entity";
 import IVote from "../models/vote.model";
@@ -12,8 +11,8 @@ export class Vote implements IVote {
     @ManyToOne(() => Post, (post) => post.vote, { primary: true, nullable: false })
     post: Post;
 
-    @Column({ type: "enum", enum: VoteState })
-    vote: VoteState;
+    @Column({ type: "tinyint", width: 1 })
+    vote: number;
 
     @CreateDateColumn({ type: "timestamp" })
     createdAt: Date;

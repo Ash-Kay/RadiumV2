@@ -141,6 +141,19 @@ export class PostService {
     }
 
     /**
+     * Get total vote count
+     * @param postid
+     * @returns UpdateResult
+     */
+    getVoteSum(id: number): Promise<any> {
+        return this.voteRepository
+            .createQueryBuilder("vote")
+            .select("SUM(vote.vote)", "sum")
+            .where("vote.post.id = :id", { id })
+            .getRawOne();
+    }
+
+    /**
      * Comment
      * @param Comment data
      * @returns Comment Entity

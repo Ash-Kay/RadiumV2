@@ -70,6 +70,23 @@ export const feed = async (request: Request, response: Response): Promise<void> 
     const postService = new PostService();
     const page = +request.query.page;
 
+    //TODO: HotFix for first request not authenticated
+    if (page <= 0) {
+        logger.info("Feed Fetched");
+        response
+            .status(HttpStatusCode.OK)
+            .send(
+                makePaginationResponse(
+                    true,
+                    "Feed fetched sucessfully!",
+                    request.baseUrl + "/" + (page - 1),
+                    request.baseUrl + "/" + (page + 1),
+                    []
+                )
+            );
+        return;
+    }
+
     if (request.user === undefined || request.user === null) {
         const rawPosts = await postService.getFeed((page - 1) * 5, 5);
 
@@ -280,6 +297,18 @@ export const downvote = async (request: Request, response: Response): Promise<vo
 
     logger.info(`User with ID: ${request.user.id} DOWNVOTED post with ID: ${request.params.id}`);
     response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Downvoted", downvote));
+};
+
+/**
+ *  Get total sum of upvote/downvote
+ * */
+export const countVote = async (request: Request, response: Response): Promise<void> => {
+    const postService = new PostService();
+
+    const { sum } = await postService.getVoteSum(+request.params.id);
+
+    logger.info(`Fetched Vote Count for post with ID: ${request.params.id}`);
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Vote Count Fetched", { voteSum: sum }));
 };
 
 /**
