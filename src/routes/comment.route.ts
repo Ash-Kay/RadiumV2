@@ -9,5 +9,9 @@ router.get("/:id", CommentController.one);
 router.delete("/:id", verifyAuth, CommentController.remove);
 router.delete("/:id/permenent", verifyAuth, CommentController.permenentRemove);
 router.patch(":/id", verifyAuth, validateRequest(schema.updateComment), CommentController.edit);
+router.get("/:id/vote", CommentController.countVote);
+router.post("/:id/upvote", verifyAuth, CommentController.upvote);
+router.post("/:id/downvote", verifyAuth, CommentController.downvote);
+router.delete("/:id/removevote", verifyAuth, CommentController.removeVote);
 
 export default router;

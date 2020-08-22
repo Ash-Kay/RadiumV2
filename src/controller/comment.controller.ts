@@ -9,6 +9,9 @@ config();
 
 // Import Services
 import { CommentService } from "../service/comment.service";
+import { CVote } from "../entity/cvote.entity";
+import { RecursivePartial } from "../interface/utilsTypes";
+import { VoteState } from "../interface/db.enum";
 
 /**
  *  Get comment by id
@@ -99,4 +102,112 @@ export const edit = async (request: Request, response: Response): Promise<void> 
 
     logger.info(`User with ID: ${request.user.id}' UPDATED comment with ID: `);
     response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment updated successfully", {}));
+};
+
+//!=======================================
+
+/**
+ *  Upvote a comment
+ * */
+export const upvote = async (request: Request, response: Response): Promise<void> => {
+    const commentService = new CommentService();
+
+    let upvote: RecursivePartial<CVote> = {
+        user: {
+            id: request.user.id,
+        },
+        comment: {
+            id: +request.params.id,
+        },
+        vote: VoteState.UPVOTE,
+    };
+
+    try {
+        await commentService.removeVote({ user: upvote.user, comment: upvote.comment });
+        upvote = await commentService.vote(upvote);
+    } catch (e) {
+        if (e.code === "ER_DUP_ENTRY") {
+            logger.error(`User with ID: ${request.user.id} ALREADY UPVOTED comment with ID: ${request.params.id}`);
+            response
+                .status(HttpStatusCode.BAD_REQUEST)
+                .send(makeResponse(false, "Already Upvoted", {}, "alredy upvoted"));
+        } else {
+            logger.error(
+                `ERROR! when User with ID: ${request.user.id} tried UPVOTE comment with ID: ${request.params.id}`,
+                e
+            );
+            response
+                .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+                .send(makeResponse(false, "Something went wrong", {}, "Something went wrong"));
+        }
+        return;
+    }
+
+    logger.info(`User with ID: ${request.user.id} UPVOTED comment with ID: ${request.params.id}`);
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment Upvoted", upvote));
+};
+
+/**
+ *  Remove vote of comment
+ * */
+export const removeVote = async (request: Request, response: Response): Promise<void> => {
+    const commentService = new CommentService();
+
+    await commentService.removeVote({ user: request.user.id, comment: request.params.id });
+
+    logger.info(`${request.user.id} REMOVE VOTE comment: ${request.params.id}`);
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment vote Removed", {}));
+};
+
+/**
+ *  Downvote a comment
+ * */
+export const downvote = async (request: Request, response: Response): Promise<void> => {
+    const commentService = new CommentService();
+
+    let downvote: RecursivePartial<CVote> = {
+        user: {
+            id: request.user.id,
+        },
+        comment: {
+            id: +request.params.id,
+        },
+        vote: VoteState.DOWNVOTE,
+    };
+
+    try {
+        await commentService.removeVote({ user: downvote.user, comment: downvote.comment });
+        downvote = await commentService.vote(downvote);
+    } catch (e) {
+        if (e.code === "ER_DUP_ENTRY") {
+            logger.error(`User with ID: ${request.user.id} ALREADY DOWNVOTED comment with ID: ${request.params.id}`);
+            response
+                .status(HttpStatusCode.BAD_REQUEST)
+                .send(makeResponse(false, "Already Downvoted", {}, "alredy downvoted"));
+        } else {
+            logger.error(
+                `ERROR! when User with ID: ${request.user.id} tried DOWNVOTE comment with ID: ${request.params.id}`,
+                e
+            );
+            response
+                .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
+                .send(makeResponse(false, "Something went wrong", {}, "Something went wrong"));
+        }
+        return;
+    }
+
+    logger.info(`User with ID: ${request.user.id} DOWNVOTED comment with ID: ${request.params.id}`);
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment Downvoted", downvote));
+};
+
+/**
+ *  Get total sum of upvote/downvote
+ * */
+export const countVote = async (request: Request, response: Response): Promise<void> => {
+    const commentService = new CommentService();
+
+    const { sum } = await commentService.getVoteSum(+request.params.id);
+
+    logger.info(`Fetched Vote Count for comment with ID: ${request.params.id}`);
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Vote Count Fetched", { voteSum: sum }));
 };

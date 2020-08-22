@@ -56,6 +56,6 @@ router.post(
     validateRequest(schema.createComment),
     PostController.comment
 );
-router.get("/:id/comment", PostController.allComments);
+router.get("/:id/comment", verifyOptionalAuth, PostController.allComments);
 
 export default router;

@@ -63,7 +63,7 @@ export class User implements IUser {
     @Column({ type: "enum", enum: Role, default: Role.USER })
     role: Role;
 
-    @Column({ length: 30, nullable: true })
+    @Column({ length: 80, nullable: true })
     country: string;
 
     @OneToMany(() => Post, (post) => post.user)

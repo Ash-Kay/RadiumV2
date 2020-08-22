@@ -1,13 +1,13 @@
 import { config } from "dotenv";
 import ffmpeg from "fluent-ffmpeg";
 import mime from "mime/lite";
-config();
 import { Post } from "../entity/post.entity";
 import { Vote } from "../entity/vote.entity";
 import { Comment } from "../entity/comment.entity";
 import { getRepository, Repository, UpdateResult, DeleteResult } from "typeorm";
 import { RecursivePartial } from "../interface/utilsTypes";
-import { PostWithUserVote } from "../interface/model.interface";
+import { PostWithUserVote, CommentWithUserVote } from "../interface/model.interface";
+config();
 
 export class PostService {
     postRepository: Repository<Post>;
@@ -18,8 +18,6 @@ export class PostService {
         this.postRepository = getRepository(Post);
         this.voteRepository = getRepository(Vote);
         this.commentRepository = getRepository(Comment);
-
-        ffmpeg.setFfprobePath(process.env.FF_PATH);
     }
 
     /**
@@ -158,8 +156,13 @@ export class PostService {
      * @param Comment data
      * @returns Comment Entity
      */
-    comment(data: RecursivePartial<Comment>): Promise<Comment> {
-        return this.commentRepository.save(data as Comment);
+    async comment(data: RecursivePartial<Comment>): Promise<Comment> {
+        if (data.mediaUrl !== null && data.mediaUrl !== undefined) {
+            const data1: Comment = await this.generateCommentMeta(data as Comment);
+            return this.commentRepository.save(data1);
+        } else {
+            return this.commentRepository.save(data as Comment);
+        }
     }
 
     /**
@@ -177,6 +180,21 @@ export class PostService {
     }
 
     /**
+     * All Comments on a post
+     * @param postId of post
+     * @returns all comments
+     */
+    getAllCommentsWithVotes(postId: number, userId: number): Promise<CommentWithUserVote[]> {
+        return this.postRepository.query(
+            `SELECT comments.*, users.username, users.avatarUrl, 
+            (SELECT vote FROM cvotes WHERE cvotes.userId =? AND cvotes.commentId = comments.id) as vote
+            FROM comments
+            JOIN users ON users.id = comments.userId where comments.postId =?;`,
+            [userId, postId]
+        );
+    }
+
+    /**
      * Adds metadata to postfeed before saving
      * @param post
      * @returns post with metadata
@@ -191,11 +209,31 @@ export class PostService {
                     post.width = metadata.streams[0].width!;
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     post.height = metadata.streams[0].height!;
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    post.aspectRatio = metadata.streams[0].display_aspect_ratio!;
                     post.mime = mime.getType(post.mediaUrl);
                 }
                 resolve(post);
+            });
+        });
+    }
+
+    /**
+     * Adds metadata to postfeed before saving
+     * @param post
+     * @returns post with metadata
+     */
+    generateCommentMeta(comment: Comment): Promise<Comment> {
+        return new Promise((resolve, reject) => {
+            ffmpeg.ffprobe(comment.mediaUrl, function (err, metadata) {
+                if (err) {
+                    reject(err);
+                } else {
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    comment.width = metadata.streams[0].width!;
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    comment.height = metadata.streams[0].height!;
+                    comment.mime = mime.getType(comment.mediaUrl);
+                }
+                resolve(comment);
             });
         });
     }

@@ -1,11 +1,14 @@
 import { Comment } from "../entity/comment.entity";
 import { getRepository, Repository, UpdateResult, DeleteResult } from "typeorm";
+import { CVote } from "../entity/cvote.entity";
 
 export class CommentService {
     commentRepository: Repository<Comment>;
+    voteRepository: Repository<CVote>;
 
     constructor() {
         this.commentRepository = getRepository(Comment);
+        this.voteRepository = getRepository(CVote);
     }
 
     /**
@@ -62,5 +65,36 @@ export class CommentService {
             .set(data)
             .where({ id, user: { id: userId } })
             .execute();
+    }
+
+    /**
+     * Upvote
+     * @param {"user":id,"comment":id,"vote":VOTE}
+     * @returns Upvote entity
+     */
+    vote(data: object): Promise<CVote> {
+        return this.voteRepository.save(data);
+    }
+
+    /**
+     * Remove Upvote
+     * @param {"user":id,"comment":id}
+     * @returns UpdateResult
+     */
+    removeVote(data: object): Promise<DeleteResult> {
+        return this.voteRepository.delete(data);
+    }
+
+    /**
+     * Get total vote count
+     * @param commentId
+     * @returns UpdateResult
+     */
+    getVoteSum(id: number): Promise<any> {
+        return this.voteRepository
+            .createQueryBuilder("vote")
+            .select("SUM(vote.vote)", "sum")
+            .where("vote.comment.id = :id", { id })
+            .getRawOne();
     }
 }

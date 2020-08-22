@@ -17,6 +17,5 @@ export default interface Post {
     tags: Tag[];
     width: number;
     height: number;
-    aspectRatio: string;
     mime: string;
 }

@@ -21,7 +21,7 @@ export class Post implements IPost {
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;
 
-    @Column({ length: 50 })
+    @Column({ length: 100 })
     title: string;
 
     @Column()
@@ -59,9 +59,6 @@ export class Post implements IPost {
 
     @Column({ unsigned: true })
     height: number;
-
-    @Column()
-    aspectRatio: string;
 
     @Column()
     mime: string;

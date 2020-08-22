@@ -5,15 +5,11 @@ import { RecursivePartial } from "../interface/utilsTypes";
 import { config } from "dotenv";
 import HttpStatusCode from "../utils/httpStatusCode";
 import { VoteState } from "../interface/db.enum";
-import TimeAgo from "javascript-time-ago";
-import en from "javascript-time-ago/locale/en";
 import logger from "../utils/logger";
-import _ from "lodash";
 import fs from "fs";
 config();
 
 //Entities
-import { Post } from "../entity/post.entity";
 import { Vote } from "../entity/vote.entity";
 import { Comment } from "../entity/comment.entity";
 
@@ -21,9 +17,14 @@ import { Comment } from "../entity/comment.entity";
 import { PostService } from "../service/post.service";
 import { TagService } from "../service/tag.service";
 
-// Config
-TimeAgo.addLocale(en);
-const timeAgo = new TimeAgo();
+//Mapper
+import {
+    mapCreatePostResponseToEntity,
+    mapGetFeedSqlToResponse,
+    mapGetFeedWithVoteSqlToResponse,
+    mapGetPostCommentSqlToResponse,
+    mapGetPostCommentWithVoteSqlToResponse,
+} from "../mapper";
 
 /**
  *  Create post
@@ -37,16 +38,8 @@ export const create = async (request: Request, response: Response): Promise<void
     const postService = new PostService();
     const tagService = new TagService();
 
-    let post: RecursivePartial<Post> = {
-        title: request.body.title,
-        sensitive: request.body.sensitive,
-        mediaUrl: request.file.path.replace(/\\/g, "/"),
-        user: {
-            id: request.user.id,
-        },
-    };
-
-    post = await postService.create(post);
+    const data = mapCreatePostResponseToEntity(request.body, request.user, request.file);
+    const post = await postService.create(data);
 
     request.body.tags?.forEach(async (tagText) => {
         const tag = await tagService.getByText(tagText);
@@ -90,12 +83,7 @@ export const feed = async (request: Request, response: Response): Promise<void> 
     if (request.user === undefined || request.user === null) {
         const rawPosts = await postService.getFeed((page - 1) * 5, 5);
 
-        const posts = _.map(rawPosts, (e) =>
-            _.assign(e, {
-                timeago: timeAgo.format(new Date(e.createdAt).getTime(), "twitter"),
-                sensitive: Boolean(+e.sensitive),
-            })
-        );
+        const posts = mapGetFeedSqlToResponse(rawPosts);
 
         logger.info("Feed Fetched");
         response
@@ -112,17 +100,7 @@ export const feed = async (request: Request, response: Response): Promise<void> 
     } else {
         const rawPosts = await postService.getFeedWithVotes(request.user.id, (page - 1) * 5, 5);
 
-        const posts = _.chain(rawPosts)
-            .map((e) =>
-                _.assign(e, {
-                    timeago: timeAgo.format(new Date(e.createdAt).getTime(), "twitter"),
-                    user: { id: e.userId, username: e.username, avatarUrl: e.avatarUrl },
-                    sensitive: Boolean(+e.sensitive),
-                    vote: +e.vote,
-                })
-            )
-            .map((e) => _.omit(e, ["userId", "username", "avatarUrl"]))
-            .value();
+        const posts = mapGetFeedWithVoteSqlToResponse(rawPosts);
 
         logger.info("Personalized Feed Fetched");
         response
@@ -317,6 +295,7 @@ export const countVote = async (request: Request, response: Response): Promise<v
 export const comment = async (request: Request, response: Response): Promise<void> => {
     let filePath;
     if (request.file) {
+        console.log("request.file", request.file);
         filePath = request.file.path.replace(/\\/g, "/");
     }
 
@@ -347,15 +326,19 @@ export const comment = async (request: Request, response: Response): Promise<voi
  * */
 export const allComments = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
+    if (request.user === undefined || request.user === null) {
+        const rawComms: Comment[] = await postService.getAllcomment(+request.params.id);
 
-    const rawComms: Comment[] = await postService.getAllcomment(+request.params.id);
+        const comms = mapGetPostCommentSqlToResponse(rawComms);
 
-    const comms = _.map(rawComms, (e) =>
-        _.assign(e, {
-            timeago: timeAgo.format(new Date(e.createdAt).getTime(), "twitter"),
-        })
-    );
+        logger.info(`All comment on postID: ${request.params.id}`);
+        response.status(HttpStatusCode.OK).send(makeResponse(true, "all comments of post fetched successfully", comms));
+    } else {
+        const rawComms = await postService.getAllCommentsWithVotes(+request.params.id, request.user.id);
 
-    logger.info(`All comment on postID: ${request.params.id}`);
-    response.status(HttpStatusCode.OK).send(makeResponse(true, "all comments of post fetched successfully", comms));
+        const comms = mapGetPostCommentWithVoteSqlToResponse(rawComms);
+
+        logger.info(`All comment on postID With Auth: ${request.params.id}`);
+        response.status(HttpStatusCode.OK).send(makeResponse(true, "all comments of post fetched successfully", comms));
+    }
 };

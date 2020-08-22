@@ -33,6 +33,7 @@ createConnection().then(() => {
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(morgan("dev", { stream: new LoggerStream() }));
     app.use("/uploads", express.static("uploads"));
+    app.use("/test", express.static("test"));
     app.use(errorhandler());
 
     const baseUrl = process.env.BASE_URL;
