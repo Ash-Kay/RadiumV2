@@ -24,6 +24,8 @@ import {
     mapGetFeedWithVoteSqlToResponse,
     mapGetPostCommentSqlToResponse,
     mapGetPostCommentWithVoteSqlToResponse,
+    mapGetOneWithVotePostSqlToResponse,
+    mapGetOnePostSqlToResponse,
 } from "../mapper";
 
 /**
@@ -61,27 +63,14 @@ export const create = async (request: Request, response: Response): Promise<void
  * */
 export const feed = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
-    const page = +request.query.page;
+    let page = +request.query.page;
 
-    //TODO: HotFix for first request not authenticated
-    if (page <= 0) {
-        logger.info("Feed Fetched");
-        response
-            .status(HttpStatusCode.OK)
-            .send(
-                makePaginationResponse(
-                    true,
-                    "Feed fetched sucessfully!",
-                    request.baseUrl + "/" + (page - 1),
-                    request.baseUrl + "/" + (page + 1),
-                    []
-                )
-            );
-        return;
+    if (!page || page <= 0) {
+        page = 1;
     }
 
-    if (request.user === undefined || request.user === null) {
-        const rawPosts = await postService.getFeed((page - 1) * 5, 5);
+    if (!request.user) {
+        const rawPosts = await postService.getFeedWithVoteSum((page - 1) * 5, 5);
 
         const posts = mapGetFeedSqlToResponse(rawPosts);
 
@@ -98,7 +87,7 @@ export const feed = async (request: Request, response: Response): Promise<void> 
                 )
             );
     } else {
-        const rawPosts = await postService.getFeedWithVotes(request.user.id, (page - 1) * 5, 5);
+        const rawPosts = await postService.getFeedWithVotesAndVoteSum(request.user.id, (page - 1) * 5, 5);
 
         const posts = mapGetFeedWithVoteSqlToResponse(rawPosts);
 
@@ -122,16 +111,34 @@ export const feed = async (request: Request, response: Response): Promise<void> 
  * */
 export const one = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
-    const post = await postService.findAndLoadUser(+request.params.id);
 
-    if (post === undefined) {
-        logger.info("Post NOT found");
-        response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(false, "Post not found!", {}, "POST NOT FOUND"));
-        return;
+    if (!request.user) {
+        const rawPost = await postService.findPostWithVoteSum(+request.params.id);
+        const post = mapGetOnePostSqlToResponse(rawPost);
+
+        if (!post) {
+            logger.info("Post NOT found");
+            response
+                .status(HttpStatusCode.NOT_FOUND)
+                .send(makeResponse(false, "Post not found!", {}, "POST NOT FOUND"));
+            return;
+        }
+        logger.info(`Post with ID: ${request.params.id} fetched`);
+        response.status(HttpStatusCode.OK).send(makeResponse(true, "Post fetched sucessfully!", post));
+    } else {
+        const rawPost = await postService.findPostWithVoteAndVoteSum(+request.params.id, request.user.id);
+        const post = mapGetOneWithVotePostSqlToResponse(rawPost);
+
+        if (!post) {
+            logger.info("Post NOT found");
+            response
+                .status(HttpStatusCode.NOT_FOUND)
+                .send(makeResponse(false, "Post not found!", {}, "POST NOT FOUND"));
+            return;
+        }
+        logger.info(`Post with ID: ${request.params.id} fetched with auth`);
+        response.status(HttpStatusCode.OK).send(makeResponse(true, "Post fetched sucessfully!", post));
     }
-
-    logger.info(`Post with ID: ${request.params.id} fetched`);
-    response.status(HttpStatusCode.OK).send(makeResponse(true, "Post fetched sucessfully!", post));
 };
 
 /**

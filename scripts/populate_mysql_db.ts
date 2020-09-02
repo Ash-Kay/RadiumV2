@@ -27,8 +27,8 @@ createConnection().then(async (connection) => {
             await connection.manager.save(user);
         }
 
-        //Create 50 Posts
-        for (let i = 1; i <= 50; i++) {
+        //Create 20 Posts
+        for (let i = 1; i <= 20; i++) {
             const post = new Post();
             post.title = faker.lorem.sentence(5);
             post.mediaUrl = filePath;
@@ -43,7 +43,7 @@ createConnection().then(async (connection) => {
         }
 
         //Create Tags
-        for (let i = 1; i <= 50; i++) {
+        for (let i = 1; i <= 20; i++) {
             if (Math.random() < 0.2) continue;
             const tag = new Tag();
             tag.tagText = faker.random.word() + i;

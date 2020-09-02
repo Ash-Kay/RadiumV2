@@ -6,7 +6,7 @@ import { Vote } from "../entity/vote.entity";
 import { Comment } from "../entity/comment.entity";
 import { getRepository, Repository, UpdateResult, DeleteResult } from "typeorm";
 import { RecursivePartial } from "../interface/utilsTypes";
-import { PostWithUserVote, CommentWithUserVote } from "../interface/model.interface";
+import { CommentWithUserVote, PostWithUserVoteAndVoteSum, PostWithVoteSum } from "../interface/model.interface";
 config();
 
 export class PostService {
@@ -34,33 +34,44 @@ export class PostService {
      * Fetches posts
      * @returns List of Postss
      */
-    getFeed(skip: number, take: number): Promise<Post[]> {
-        return this.postRepository
-            .createQueryBuilder("post")
-            .orderBy("post.createdAt", "DESC")
-            .skip(skip)
-            .take(take)
-            .innerJoin("post.user", "user")
-            .addSelect(["user.id", "user.username", "user.avatarUrl"])
-            .getMany();
+    getFeedWithVoteSum(skip: number, take: number): Promise<PostWithVoteSum[]> {
+        return this.postRepository.query(
+            `
+            SELECT op.*, users.username, users.avatarUrl,
+            (
+                SELECT SUM(vote) FROM votes
+                INNER JOIN posts ON posts.id = votes.postId
+                WHERE posts.id = op.id
+            ) AS voteSum
+                FROM posts op
+                INNER JOIN users ON users.id = op.userId
+                ORDER BY op.createdAt DESC LIMIT ?, ?;`,
+            [skip, take]
+        );
     }
 
     /**
-     * Fetches posts and also add isUp/Downvoted parameter
+     * Fetches posts, add isUp/Downvoted parameter, add VoteSum parameter
      * @returns List of Posts
      */
-    getFeedWithVotes(userId: number, skip: number, take: number): Promise<PostWithUserVote[]> {
+    getFeedWithVotesAndVoteSum(userId: number, skip: number, take: number): Promise<PostWithUserVoteAndVoteSum[]> {
         return this.postRepository.query(
             `
-        SELECT op.*, users.username, users.avatarUrl, (
-            SELECT vote FROM votes
-            INNER JOIN users ON users.id = votes.userId
-            INNER JOIN posts ON posts.id = votes.postId
-            WHERE users.id =? AND posts.id = op.id
-        ) AS vote 
-        FROM posts op
-        INNER JOIN users ON users.id = op.userId
-        ORDER BY op.createdAt DESC LIMIT ?, ?;`,
+            SELECT op.*, users.username, users.avatarUrl,
+            (
+                SELECT vote FROM votes
+                INNER JOIN users ON users.id = votes.userId
+                INNER JOIN posts ON posts.id = votes.postId
+                WHERE users.id =? AND posts.id = op.id
+            ) AS vote ,
+            (
+                SELECT SUM(vote) FROM votes
+                INNER JOIN posts ON posts.id = votes.postId
+                WHERE posts.id = op.id
+            ) AS voteSum
+                FROM posts op
+                INNER JOIN users ON users.id = op.userId
+                ORDER BY op.createdAt DESC LIMIT ?, ?;`,
             [userId, skip, take]
         );
     }
@@ -84,17 +95,47 @@ export class PostService {
     }
 
     /**
-     * Return posts with user inside
+     * Return posts with user and voteSum
      * @param id
      * @returns post with user inside
      */
-    findAndLoadUser(id: number): Promise<Post | undefined> {
-        return this.postRepository
-            .createQueryBuilder("post")
-            .where("post.id = :id", { id })
-            .innerJoin("post.user", "user")
-            .addSelect(["user.id", "user.username", "user.avatarUrl"])
-            .getOne();
+    findPostWithVoteSum(postId: number): Promise<Post | undefined> {
+        return this.postRepository.query(
+            `SELECT op.*, users.username, users.avatarUrl, (
+                SELECT SUM(vote) FROM votes 
+                INNER JOIN posts ON posts.id = votes.postId
+                WHERE posts.id = op.id
+            ) AS voteSum
+                FROM posts op
+                INNER JOIN users ON users.id = op.userId
+                WHERE op.id = ?;`,
+            [postId]
+        );
+    }
+
+    /**
+     * Return posts with user and voteSum
+     * @param id
+     * @returns post with user inside
+     */
+    findPostWithVoteAndVoteSum(postId: number, userId: number): Promise<Post | undefined> {
+        return this.postRepository.query(
+            `SELECT op.*, users.username, users.avatarUrl, (
+                SELECT vote FROM votes
+                INNER JOIN users ON users.id = votes.userId
+                INNER JOIN posts ON posts.id = votes.postId
+                WHERE users.id = ? AND posts.id = op.id
+            ) AS vote,
+            (
+                SELECT SUM(vote) FROM votes 
+                INNER JOIN posts ON posts.id = votes.postId
+                WHERE posts.id = op.id
+            ) AS voteSum
+                FROM posts op
+                INNER JOIN users ON users.id = op.userId
+                WHERE op.id = ?;`,
+            [userId, postId]
+        );
     }
 
     /**

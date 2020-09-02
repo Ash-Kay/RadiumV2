@@ -22,13 +22,19 @@ export const mapCreatePostResponseToEntity = (body, ruser, file): RecursiveParti
     };
 };
 
-export const mapGetFeedSqlToResponse = (rawPosts): Post[] => {
-    return _.map(rawPosts, (e) =>
-        _.assign(e, {
-            timeago: timeAgo.format(new Date(e.createdAt).getTime(), "twitter"),
-            sensitive: Boolean(+e.sensitive),
-        })
-    );
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const mapGetFeedSqlToResponse = (rawPosts) => {
+    return _.chain(rawPosts)
+        .map((e) =>
+            _.assign(e, {
+                timeago: timeAgo.format(new Date(e.createdAt).getTime(), "twitter"),
+                user: { id: e.userId, username: e.username, avatarUrl: e.avatarUrl },
+                sensitive: Boolean(+e.sensitive),
+                voteSum: +e.voteSum,
+            })
+        )
+        .map((e) => _.omit(e, ["userId", "username", "avatarUrl"]))
+        .value();
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -40,6 +46,7 @@ export const mapGetFeedWithVoteSqlToResponse = (rawPosts) => {
                 user: { id: e.userId, username: e.username, avatarUrl: e.avatarUrl },
                 sensitive: Boolean(+e.sensitive),
                 vote: +e.vote,
+                voteSum: +e.voteSum,
             })
         )
         .map((e) => _.omit(e, ["userId", "username", "avatarUrl"]))
@@ -66,4 +73,35 @@ export const mapGetPostCommentWithVoteSqlToResponse = (rawComms) => {
         )
         .map((e) => _.omit(e, ["userId", "username", "avatarUrl"]))
         .value();
+};
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const mapGetOneWithVotePostSqlToResponse = (rawPost) => {
+    return _.chain(rawPost)
+        .map((e) =>
+            _.assign(e, {
+                timeago: timeAgo.format(new Date(e.createdAt).getTime(), "twitter"),
+                user: { id: e.userId, username: e.username, avatarUrl: e.avatarUrl },
+                sensitive: Boolean(+e.sensitive),
+                vote: +e.vote,
+                voteSum: +e.voteSum,
+            })
+        )
+        .map((e) => _.omit(e, ["userId", "username", "avatarUrl"]))
+        .value()[0];
+};
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const mapGetOnePostSqlToResponse = (rawPost) => {
+    return _.chain(rawPost)
+        .map((e) =>
+            _.assign(e, {
+                timeago: timeAgo.format(new Date(e.createdAt).getTime(), "twitter"),
+                user: { id: e.userId, username: e.username, avatarUrl: e.avatarUrl },
+                sensitive: Boolean(+e.sensitive),
+                voteSum: +e.voteSum,
+            })
+        )
+        .map((e) => _.omit(e, ["userId", "username", "avatarUrl"]))
+        .value()[0];
 };

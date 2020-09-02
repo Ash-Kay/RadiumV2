@@ -15,8 +15,23 @@ export interface PostFeedResponse extends Post {
     timeago: string;
 }
 
+export interface PostWithVoteSum extends Omit<Post, "comments" | "vote"> {
+    voteSum: number;
+    userId: number;
+    username: string;
+    avatarUrl: string;
+}
+
 export interface PostWithUserVote extends Omit<Post, "comments" | "vote"> {
     vote: number;
+    userId: number;
+    username: string;
+    avatarUrl: string;
+}
+
+export interface PostWithUserVoteAndVoteSum extends Omit<Post, "comments" | "vote"> {
+    vote: number;
+    voteSum: number;
     userId: number;
     username: string;
     avatarUrl: string;
