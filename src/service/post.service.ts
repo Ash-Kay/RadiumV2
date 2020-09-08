@@ -227,10 +227,15 @@ export class PostService {
      */
     getAllCommentsWithVotes(postId: number, userId: number): Promise<CommentWithUserVote[]> {
         return this.postRepository.query(
-            `SELECT comments.*, users.username, users.avatarUrl, 
-            (SELECT vote FROM cvotes WHERE cvotes.userId =? AND cvotes.commentId = comments.id) as vote
-            FROM comments
-            JOIN users ON users.id = comments.userId where comments.postId =?;`,
+            `SELECT oc.*, users.username, users.avatarUrl, 
+            (SELECT vote FROM cvotes WHERE cvotes.userId =? AND cvotes.commentId = oc.id) as vote,
+            (
+                SELECT SUM(vote) FROM cvotes 
+                INNER JOIN comments ON comments.id = cvotes.commentId
+				WHERE comments.id = oc.Id
+            ) AS voteSum
+            FROM comments oc
+            JOIN users ON users.id = oc.userId where oc.postId =?;`,
             [userId, postId]
         );
     }

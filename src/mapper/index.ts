@@ -69,6 +69,7 @@ export const mapGetPostCommentWithVoteSqlToResponse = (rawComms) => {
                 timeago: timeAgo.format(new Date(e.createdAt).getTime(), "twitter"),
                 user: { id: e.userId, username: e.username, avatarUrl: e.avatarUrl },
                 vote: +e.vote,
+                voteSum: +e.voteSum,
             })
         )
         .map((e) => _.omit(e, ["userId", "username", "avatarUrl"]))

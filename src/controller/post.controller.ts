@@ -333,7 +333,7 @@ export const comment = async (request: Request, response: Response): Promise<voi
  * */
 export const allComments = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
-    if (request.user === undefined || request.user === null) {
+    if (!request.user) {
         const rawComms: Comment[] = await postService.getAllcomment(+request.params.id);
 
         const comms = mapGetPostCommentSqlToResponse(rawComms);
