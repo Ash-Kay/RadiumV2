@@ -9,7 +9,7 @@ import faker from "faker";
 import kleur from "kleur";
 
 //visible at: http://localhost:3000/test/file/img.jpg
-const filePath = "/test/file/img.jpg";
+const filePath = "test/file/img.jpg";
 
 createConnection().then(async (connection) => {
     try {
@@ -74,7 +74,7 @@ createConnection().then(async (connection) => {
             await connection.manager.save(comment);
         }
 
-        // //Create CVotes
+        //Create CVotes
         for (let i = 1; i <= 20; i++) {
             const vote = new CVote();
             vote.vote = Math.random() < 0.5 ? 1 : -1;

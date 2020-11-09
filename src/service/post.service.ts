@@ -18,6 +18,10 @@ export class PostService {
         this.postRepository = getRepository(Post);
         this.voteRepository = getRepository(Vote);
         this.commentRepository = getRepository(Comment);
+
+        if (process.platform == "win32") {
+            ffmpeg.setFfprobePath(process.env.FF_PATH);
+        }
     }
 
     /**

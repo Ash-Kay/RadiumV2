@@ -1,11 +1,13 @@
-// eslint-disable-next-line no-undef
+import { config } from "dotenv";
+config();
+
 module.exports = {
     type: "mysql",
-    host: "localhost",
+    host: process.env.DB_HOST,
     port: 3306,
-    username: "root",
-    password: "root",
-    database: "testdb",
+    username: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_DBNAME,
     synchronize: true,
     logging: true,
     entities: ["src/entity/**/*.ts"],
