@@ -49,6 +49,7 @@ export class PostService {
             ) AS voteSum
                 FROM posts op
                 INNER JOIN users ON users.id = op.userId
+                WHERE op.deletedAt IS NULL
                 ORDER BY op.createdAt DESC LIMIT ?, ?;`,
             [skip, take]
         );
@@ -75,6 +76,7 @@ export class PostService {
             ) AS voteSum
                 FROM posts op
                 INNER JOIN users ON users.id = op.userId
+                WHERE op.deletedAt IS NULL
                 ORDER BY op.createdAt DESC LIMIT ?, ?;`,
             [userId, skip, take]
         );
@@ -220,7 +222,7 @@ export class PostService {
             .createQueryBuilder("comment")
             .innerJoin("comment.user", "user")
             .addSelect(["user.id", "user.username", "user.avatarUrl"])
-            .where({ post: { id } })
+            .where({ post: { id }, isDeleted: null })
             .getMany();
     }
 
@@ -239,7 +241,8 @@ export class PostService {
 				WHERE comments.id = oc.Id
             ) AS voteSum
             FROM comments oc
-            JOIN users ON users.id = oc.userId where oc.postId =?;`,
+            JOIN users ON users.id = oc.userId 
+            WHERE oc.postId =? AND oc.deletedAt IS NULL;`,
             [userId, postId]
         );
     }
