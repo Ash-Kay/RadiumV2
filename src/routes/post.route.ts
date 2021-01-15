@@ -14,11 +14,17 @@ const storage = multer.diskStorage({
         cb(null, process.env.UPLOAD_PATH);
     },
     filename: (req, file, cb) => {
-        const radomFileName =
-            crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") +
-            "." +
-            file.originalname.split(".")[1];
-        cb(null, radomFileName);
+        const re = /(?:\.([^.]+))?$/;
+        const regRes = re.exec(file.originalname);
+
+        if (regRes) {
+            const ext = regRes[1];
+            const radomFileName =
+                crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") + "." + ext;
+            cb(null, radomFileName);
+        } else {
+            cb(new Error("Invalid File/ Invalid File Extension"), "");
+        }
     },
 });
 
