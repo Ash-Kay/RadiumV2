@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { handle } from "./handler";
 import helmet from "helmet";
 import errorhandler from "errorhandler";
+import fs from "fs";
 
 import express from "express";
 import bodyParser from "body-parser";
@@ -43,6 +44,11 @@ createConnection().then(() => {
     app.use(baseUrl + "/posts", postRouter);
     app.use(baseUrl + "/comments", commRouter);
     app.use(error);
+
+    const uploadDir = "./uploads";
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir);
+    }
 
     app.listen(process.env.PORT || 3000, () => {
         console.log(`\n\n\n
