@@ -172,7 +172,7 @@ export class PostService {
      * @param {"user":id,"post":id,"vote":VOTE}
      * @returns Upvote entity
      */
-    vote(data: object): Promise<Vote> {
+    vote(data: any): Promise<Vote> {
         return this.voteRepository.save(data);
     }
 
@@ -181,7 +181,7 @@ export class PostService {
      * @param {"user":id,"post":id}
      * @returns UpdateResult
      */
-    removeVote(data: object): Promise<DeleteResult> {
+    removeVote(data: any): Promise<DeleteResult> {
         return this.voteRepository.delete(data);
     }
 
@@ -262,7 +262,7 @@ export class PostService {
                     post.width = metadata.streams[0].width!;
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     post.height = metadata.streams[0].height!;
-                    post.mime = mime.getType(post.mediaUrl);
+                    post.mime = mime.getType(post.mediaUrl)!;
                 }
                 resolve(post);
             });
@@ -284,7 +284,7 @@ export class PostService {
                     comment.width = metadata.streams[0].width!;
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     comment.height = metadata.streams[0].height!;
-                    comment.mime = mime.getType(comment.mediaUrl);
+                    comment.mime = mime.getType(comment.mediaUrl)!;
                 }
                 resolve(comment);
             });

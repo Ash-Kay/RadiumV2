@@ -1,6 +1,3 @@
-import { config } from "dotenv";
-config();
-
 module.exports = {
     type: "mysql",
     host: process.env.DB_HOST,
@@ -10,9 +7,9 @@ module.exports = {
     database: process.env.DB_DBNAME,
     synchronize: true,
     logging: true,
-    entities: ["src/entity/**/*.ts"],
-    migrations: ["src/migration/**/*.ts"],
-    subscribers: ["src/subscriber/**/*.ts"],
+    entities: ["./src/entity/**/*{.ts,.js}"],
+    migrations: ["./src/migration/**/*{.ts,.js}"],
+    subscribers: ["./src/subscriber/**/*{.ts,.js}"],
     cli: {
         entitiesDir: "src/entity",
         migrationsDir: "src/migration",

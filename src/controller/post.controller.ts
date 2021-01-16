@@ -63,7 +63,7 @@ export const create = async (request: Request, response: Response): Promise<void
  * */
 export const feed = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
-    let page = +request.query.page;
+    let page = +request.query.page!;
 
     if (!page || page <= 0) {
         page = 1;

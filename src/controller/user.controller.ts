@@ -144,7 +144,7 @@ export const loginWithGoogle = async (request: AuthHeaderRequest, response: Resp
 /**
  *  Takes google profile id and returns token
  * */
-export const googleAuthWeb = async (profile: Profile): Promise<void> => {
+export const googleAuthWeb = async (profile: Profile): Promise<string | void> => {
     const userService = new UserService();
     let user: Partial<User | undefined> = await userService.findByGoogleId(profile.id);
     if (user === undefined) {

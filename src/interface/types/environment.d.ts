@@ -5,7 +5,7 @@ declare global {
             DB_USER: string;
             DB_PASS: string;
             DB_DBNAME: string;
-            DB_LOGGING: string | boolean;
+            DB_LOGGING: string;
             DEBUG: string;
             BASE_URL: string;
             JWT_KEY: string;
