@@ -300,17 +300,12 @@ export const countVote = async (request: Request, response: Response): Promise<v
  *  Comment on post
  * */
 export const comment = async (request: Request, response: Response): Promise<void> => {
-    let filePath;
-    if (request.file) {
-        console.log("request.file", request.file);
-        filePath = request.file.path.replace(/\\/g, "/");
-    }
-
     const postService = new PostService();
+    const mediaUrl = (request.file as any).key;
 
     let comment: RecursivePartial<Comment> = {
         message: request.body.message,
-        mediaUrl: filePath,
+        mediaUrl,
         user: {
             id: request.user.id,
         },
