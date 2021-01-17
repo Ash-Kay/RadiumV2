@@ -254,7 +254,8 @@ export class PostService {
      */
     generatePostMeta(post: Post): Promise<Post> {
         return new Promise((resolve, reject) => {
-            ffmpeg.ffprobe(post.mediaUrl, function (err, metadata) {
+            ffmpeg.ffprobe(process.env.AWS_S3_BASE_URL + post.mediaUrl, function (err, metadata) {
+                console.log("post.mediaUrl", post.mediaUrl);
                 if (err) {
                     reject(err);
                 } else {
@@ -276,7 +277,7 @@ export class PostService {
      */
     generateCommentMeta(comment: Comment): Promise<Comment> {
         return new Promise((resolve, reject) => {
-            ffmpeg.ffprobe(comment.mediaUrl, function (err, metadata) {
+            ffmpeg.ffprobe(process.env.AWS_S3_BASE_URL + comment.mediaUrl, function (err, metadata) {
                 if (err) {
                     reject(err);
                 } else {

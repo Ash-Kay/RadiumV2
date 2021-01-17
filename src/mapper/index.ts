@@ -15,7 +15,7 @@ export const mapCreatePostResponseToEntity = (body, ruser, file): RecursiveParti
     return {
         title: body.title,
         sensitive: body.sensitive,
-        mediaUrl: file.path.replace(/\\/g, "/"),
+        mediaUrl: file.key.replace(/\\/g, "/"),
         user: {
             id: ruser.id,
         },
