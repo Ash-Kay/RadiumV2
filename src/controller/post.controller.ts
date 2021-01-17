@@ -301,7 +301,11 @@ export const countVote = async (request: Request, response: Response): Promise<v
  * */
 export const comment = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
-    const mediaUrl = (request.file as any).key;
+
+    let mediaUrl;
+    if(request.file) {
+        mediaUrl = (request.file as any).key;
+    }
 
     let comment: RecursivePartial<Comment> = {
         message: request.body.message,

@@ -10,6 +10,7 @@
         "experimentalDecorators": true,
         "sourceMap": true,
         "strictNullChecks": true,
+        "skipLibCheck": true,
         "typeRoots": ["./src/interface", "./node_modules/@types"]
     }
 }

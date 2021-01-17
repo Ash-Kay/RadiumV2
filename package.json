@@ -64,7 +64,9 @@
         "winston": "^3.3.3"
     },
     "scripts": {
-        "start": "npm run build && cd ./build && node src/index.js",
+        "start": "cd ./build && node src/index.js",
+        "pm2": "cd ./build && pm2 start src/index.js",
+        "buildStart": "npm run build && cd ./build && node src/index.js",
         "dev": "nodemon --exec ts-node src/index.ts",
         "build": "tsc -p ./",
         "test": "mocha -r ts-node/register test/**/*test.ts"
