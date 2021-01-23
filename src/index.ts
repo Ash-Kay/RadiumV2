@@ -51,11 +51,18 @@ createConnection().then(() => {
     }
 
     app.listen(process.env.PORT || 3000, () => {
-        console.log(`\n\n\n
-        ${kleur.magenta(app.get("env").toUpperCase())}  
-        
-        ${kleur.magenta(`API       → http://localhost:${process.env.PORT + process.env.BASE_URL}`)}
-        `);
+        console.log(`\n\n\n      ${kleur.magenta(app.get("env").toUpperCase())} SERVER STARTED`);
+        if (app.get("env") === "development") {
+            console.log(
+                `${kleur.green(
+                    `\n\n      API       → http://localhost:${process.env.PORT + process.env.BASE_URL}`
+                )}\n\n\n`
+            );
+        } else {
+            console.log(
+                `${kleur.red(`\n\n      API       → ${process.env.AWS_EC2_BASE_URL}:${process.env.PORT}`)}\n\n\n`
+            );
+        }
 
         logger.info(
             `${app.get("env").toUpperCase()} server started at http://localhost:${

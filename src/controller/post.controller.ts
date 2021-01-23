@@ -7,6 +7,10 @@ import HttpStatusCode from "../utils/httpStatusCode";
 import { VoteState } from "../interface/db.enum";
 import logger from "../utils/logger";
 import fs from "fs";
+import aws from "aws-sdk";
+import sharp from "sharp";
+import crypto from "crypto";
+import mime from "mime/lite";
 config();
 
 //Entities
@@ -26,6 +30,7 @@ import {
     mapGetPostCommentWithVoteSqlToResponse,
     mapGetOneWithVotePostSqlToResponse,
     mapGetOnePostSqlToResponse,
+    mapCreateCommentResponseToEntity,
 } from "../mapper";
 
 /**
@@ -39,8 +44,58 @@ export const create = async (request: Request, response: Response): Promise<void
 
     const postService = new PostService();
     const tagService = new TagService();
+    const fileName = crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex");
+    let fileMeta, mime;
 
-    const data = mapCreatePostResponseToEntity(request.body, request.user, request.file);
+    const file = request.file;
+
+    const s3 = new aws.S3({
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        region: "ap-south-1",
+    });
+
+    if (file.mimetype.startsWith("image")) {
+        console.log("/nIMAGE/n");
+        const compressedFile = await sharp(request.file.buffer).webp({ quality: 70 }).toBuffer();
+        fileMeta = await sharp(compressedFile).metadata();
+        const params = {
+            Bucket: process.env.AWS_S3_BUCKET_NAME!,
+            Key: fileName + ".webp",
+            Body: compressedFile,
+            ContentType: "image/webp",
+            ACL: "public-read",
+        };
+
+        mime = params.ContentType;
+        s3.upload(params, (err, res) => {
+            console.log(err, res);
+        });
+    } else {
+        console.log("/nVID/n");
+        fileMeta = await sharp(file.buffer).metadata();
+
+        const re = /(?:\.([^.]+))?$/;
+        const regRes = re.exec(file.originalname)!;
+        const ext = regRes[1];
+
+        const params = {
+            Bucket: process.env.AWS_S3_BUCKET_NAME!,
+            Key: fileName + "." + ext,
+            Body: file,
+            ContentType: file.mimetype,
+            ACL: "public-read",
+        };
+
+        mime = params.ContentType;
+        s3.upload(params, (err, res) => {
+            console.log(err, res);
+        });
+    }
+
+    const data = mapCreatePostResponseToEntity(request.body, request.user, fileName, fileMeta, mime);
+
+    console.log("data", data);
     const post = await postService.create(data);
 
     request.body.tags?.forEach(async (tagText) => {
@@ -302,26 +357,8 @@ export const countVote = async (request: Request, response: Response): Promise<v
 export const comment = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
 
-    let mediaUrl;
-    if(request.file) {
-        mediaUrl = (request.file as any).key;
-    }
-
-    let comment: RecursivePartial<Comment> = {
-        message: request.body.message,
-        mediaUrl,
-        user: {
-            id: request.user.id,
-        },
-        post: {
-            id: +request.params.id,
-        },
-        tagTo: {
-            id: request.body.tagTo,
-        },
-    };
-
-    comment = await postService.comment(comment);
+    const data = mapCreateCommentResponseToEntity(request.body, request.user, request.file, request.params);
+    const comment = await postService.comment(data);
 
     logger.info(`User with ID:${request.user.id} COMMENTED on ${request.params.id}, commId: ${comment.id}`, comment);
     response.status(HttpStatusCode.CREATED).send(makeResponse(true, "commented sccessfully", comment));

@@ -11,13 +11,33 @@ import { Comment } from "../entity/comment.entity";
 TimeAgo.addLocale(en);
 const timeAgo = new TimeAgo();
 
-export const mapCreatePostResponseToEntity = (body, ruser, file): RecursivePartial<Post> => {
+export const mapCreatePostResponseToEntity = (body, ruser, fileName, meta, mime): RecursivePartial<Post> => {
+    // console.log("file", file);
     return {
         title: body.title,
         sensitive: body.sensitive,
-        mediaUrl: file.key.replace(/\\/g, "/"),
+        mediaUrl: fileName,
+        height: meta.height,
+        width: meta.width,
+        mime,
         user: {
             id: ruser.id,
+        },
+    };
+};
+
+export const mapCreateCommentResponseToEntity = (body, ruser, file, params): RecursivePartial<Comment> => {
+    return {
+        message: body.message,
+        mediaUrl: file ? getMediaUrl(file) : undefined,
+        user: {
+            id: ruser.id,
+        },
+        post: {
+            id: +params.id,
+        },
+        tagTo: {
+            id: body.tagTo,
         },
     };
 };
@@ -105,4 +125,9 @@ export const mapGetOnePostSqlToResponse = (rawPost) => {
         )
         .map((e) => _.omit(e, ["userId", "username", "avatarUrl"]))
         .value()[0];
+};
+
+const getMediaUrl = (file): string => {
+    if (process.env.NODE_ENV === "development") return file.key.replace(/\\/g, "/");
+    else return file.path.replace(/\\/g, "/");
 };

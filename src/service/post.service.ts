@@ -30,8 +30,8 @@ export class PostService {
      * @returns Post entity
      */
     async create(data: RecursivePartial<Post>): Promise<Post> {
-        const data1: Post = await this.generatePostMeta(data as Post);
-        return this.postRepository.save(data1);
+        // const data1: Post = await this.generatePostMeta(data as Post);
+        return this.postRepository.save(data as any);
     }
 
     /**
@@ -254,7 +254,7 @@ export class PostService {
      */
     generatePostMeta(post: Post): Promise<Post> {
         return new Promise((resolve, reject) => {
-            ffmpeg.ffprobe(process.env.AWS_S3_BASE_URL + post.mediaUrl, function (err, metadata) {
+            ffmpeg.ffprobe(this.getMediaUrl(post), function (err, metadata) {
                 console.log("post.mediaUrl", post.mediaUrl);
                 if (err) {
                     reject(err);
@@ -277,7 +277,7 @@ export class PostService {
      */
     generateCommentMeta(comment: Comment): Promise<Comment> {
         return new Promise((resolve, reject) => {
-            ffmpeg.ffprobe(process.env.AWS_S3_BASE_URL + comment.mediaUrl, function (err, metadata) {
+            ffmpeg.ffprobe(this.getMediaUrl(comment), function (err, metadata) {
                 if (err) {
                     reject(err);
                 } else {
@@ -291,4 +291,9 @@ export class PostService {
             });
         });
     }
+
+    private getMediaUrl = (entity: Post | Comment): string => {
+        if (process.env.NODE_ENV === "development") return entity.mediaUrl;
+        else return process.env.AWS_S3_BASE_URL + entity.mediaUrl;
+    };
 }
