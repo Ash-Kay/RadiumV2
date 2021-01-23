@@ -1,4 +1,4 @@
-import { config } from "dotenv";
+import config from "../config/env.config";
 import ffmpeg from "fluent-ffmpeg";
 import mime from "mime/lite";
 import { Post } from "../entity/post.entity";
@@ -7,7 +7,6 @@ import { Comment } from "../entity/comment.entity";
 import { getRepository, Repository, UpdateResult, DeleteResult } from "typeorm";
 import { RecursivePartial } from "../interface/utilsTypes";
 import { CommentWithUserVote, PostWithUserVoteAndVoteSum, PostWithVoteSum } from "../interface/model.interface";
-config();
 
 export class PostService {
     postRepository: Repository<Post>;
@@ -20,7 +19,7 @@ export class PostService {
         this.commentRepository = getRepository(Comment);
 
         if (process.platform == "win32") {
-            ffmpeg.setFfprobePath(process.env.FF_PATH);
+            ffmpeg.setFfprobePath(config.ffPath);
         }
     }
 
@@ -254,7 +253,7 @@ export class PostService {
      */
     generatePostMeta(post: Post): Promise<Post> {
         return new Promise((resolve, reject) => {
-            ffmpeg.ffprobe(process.env.AWS_S3_BASE_URL + post.mediaUrl, function (err, metadata) {
+            ffmpeg.ffprobe(config.aws.s3BaseUrl + post.mediaUrl, function (err, metadata) {
                 console.log("post.mediaUrl", post.mediaUrl);
                 if (err) {
                     reject(err);
@@ -277,7 +276,7 @@ export class PostService {
      */
     generateCommentMeta(comment: Comment): Promise<Comment> {
         return new Promise((resolve, reject) => {
-            ffmpeg.ffprobe(process.env.AWS_S3_BASE_URL + comment.mediaUrl, function (err, metadata) {
+            ffmpeg.ffprobe(config.aws.s3BaseUrl + comment.mediaUrl, function (err, metadata) {
                 if (err) {
                     reject(err);
                 } else {

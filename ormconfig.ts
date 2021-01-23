@@ -1,12 +1,14 @@
+import config from "./src/config/env.config";
+
 module.exports = {
     type: "mysql",
-    host: process.env.DB_HOST,
+    host: config.database.host,
     port: 3306,
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_DBNAME,
+    username: config.database.username,
+    password: config.database.password,
+    database: config.database.name,
     synchronize: true,
-    logging: process.env.DB_LOGGING,
+    logging: config.database.logging,
     entities: ["./src/entity/**/*{.ts,.js}"],
     migrations: ["./src/migration/**/*{.ts,.js}"],
     subscribers: ["./src/subscriber/**/*{.ts,.js}"],

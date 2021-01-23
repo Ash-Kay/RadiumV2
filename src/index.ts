@@ -10,7 +10,7 @@ import morgan from "morgan";
 import cors from "cors";
 import compression from "compression";
 
-import { config } from "dotenv";
+import config, { verifyConfig } from "./config/env.config";
 import { error } from "./middleware/error";
 import kleur from "kleur";
 import logger, { LoggerStream } from "./utils/logger";
@@ -21,8 +21,9 @@ import commRouter from "./routes/comment.route";
 
 import { createConnection } from "typeorm";
 import passport from "passport";
-config();
 const app = express();
+
+verifyConfig(config);
 
 createConnection().then(() => {
     app.use(passport.initialize({ userProperty: "token" }));
@@ -37,7 +38,7 @@ createConnection().then(() => {
     app.use("/test", express.static("test"));
     app.use(errorhandler());
 
-    const baseUrl = process.env.BASE_URL;
+    const baseUrl = config.baseURl;
 
     //Routes
     app.use(baseUrl + "/users", userRouter);
@@ -50,18 +51,14 @@ createConnection().then(() => {
         fs.mkdirSync(uploadDir);
     }
 
-    app.listen(process.env.PORT || 3000, () => {
+    app.listen(config.port, () => {
         console.log(`\n\n\n
         ${kleur.magenta(app.get("env").toUpperCase())}  
         
-        ${kleur.magenta(`API       → http://localhost:${process.env.PORT + process.env.BASE_URL}`)}
+        ${kleur.magenta(`API       → http://localhost:${config.port + baseUrl}`)}
         `);
 
-        logger.info(
-            `${app.get("env").toUpperCase()} server started at http://localhost:${
-                process.env.PORT + process.env.BASE_URL
-            }`
-        );
+        logger.info(`${app.get("env").toUpperCase()} server started at http://localhost:${config.port + baseUrl}`);
     });
 });
 

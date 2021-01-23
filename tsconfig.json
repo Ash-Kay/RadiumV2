@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
-        "lib": ["es5", "es6"],
-        "target": "es6",
+        "lib": ["es2017"],
+        "target": "es2017",
         "esModuleInterop": true,
         "module": "commonjs",
         "moduleResolution": "node",
@@ -12,5 +12,6 @@
         "strictNullChecks": true,
         "skipLibCheck": true,
         "typeRoots": ["./src/interface", "./node_modules/@types"]
-    }
+    },
+    "exclude": ["node_modules", "test"]
 }

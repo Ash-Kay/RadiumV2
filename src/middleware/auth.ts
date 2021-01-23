@@ -3,11 +3,12 @@ import logger from "../utils/logger";
 import { NextFunction, Response } from "express";
 import HttpStatusCode from "../utils/httpStatusCode";
 import { Request, AuthHeaderRequest, OptionalAuthHeaderRequest } from "../interface/express.interface";
+import config from "../config/env.config";
 
 export const verifyAuth = (request: AuthHeaderRequest, response: Response, next: NextFunction): void => {
     try {
         const token = request.headers.authorization.split(" ")[1];
-        const user = jwt.verify(token, process.env.JWT_KEY);
+        const user = jwt.verify(token, config.jwtKey);
         //save (decoded)user for future use
         request.user = user;
         next();
@@ -26,7 +27,7 @@ export const verifyOptionalAuth = (
     try {
         if (request.headers.authorization !== null && request.headers.authorization !== undefined) {
             const token = request.headers.authorization.split(" ")[1];
-            const user = jwt.verify(token, process.env.JWT_KEY);
+            const user = jwt.verify(token, config.jwtKey);
             //save (decoded)user for future use
             request.user = user;
         }

@@ -7,10 +7,9 @@ import HttpStatusCode from "../utils/httpStatusCode";
 import { Profile } from "passport";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { config } from "dotenv";
+import config from "../config/env.config";
 import logger from "../utils/logger";
 import _ from "lodash";
-config();
 
 // Import Services
 import { UserService } from "../service/user.service";
@@ -74,7 +73,7 @@ export const login = async (request: Request, response: Response): Promise<void>
             googleId: user.googleId,
             avatarUrl: user.avatarUrl,
         };
-        token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
+        token = jwt.sign(tokenUserDetails, config.jwtKey, {
             expiresIn: "7d",
         });
     } else {
@@ -95,7 +94,7 @@ export const login = async (request: Request, response: Response): Promise<void>
 export const loginWithGoogle = async (request: AuthHeaderRequest, response: Response): Promise<void> => {
     const userService = new UserService();
     const googleToken = request.headers.authorization.split(" ")[1];
-    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const client = new OAuth2Client(config.google.clientId);
     let ticket;
     try {
         ticket = await client.verifyIdToken({ idToken: googleToken });
@@ -129,7 +128,7 @@ export const loginWithGoogle = async (request: AuthHeaderRequest, response: Resp
             googleId: user.googleId,
             avatarUrl: user.avatarUrl,
         };
-        token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
+        token = jwt.sign(tokenUserDetails, config.jwtKey, {
             expiresIn: "7d",
         });
 
@@ -171,7 +170,7 @@ export const googleAuthWeb = async (profile: Profile): Promise<string | void> =>
             googleId: savedUser.googleId,
             avatarUrl: savedUser.avatarUrl,
         };
-        const token = jwt.sign(tokenUserDetails, process.env.JWT_KEY, {
+        const token = jwt.sign(tokenUserDetails, config.jwtKey, {
             expiresIn: "7d",
         });
 

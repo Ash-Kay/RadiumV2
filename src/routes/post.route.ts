@@ -6,14 +6,13 @@ const router = Router();
 import multer from "multer";
 import multerS3 from "multer-s3";
 import aws from "aws-sdk";
-import { config } from "dotenv";
+import config from "../config/env.config";
 import { verifyAuth, verifyAuthorization, verifyOptionalAuth } from "../middleware/auth";
 import crypto from "crypto";
-config();
 
 aws.config.update({
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: config.aws.secrectAccessKey,
+    accessKeyId: config.aws.accessKeyID,
     region: "ap-south-1",
 });
 
@@ -21,7 +20,7 @@ const s3 = new aws.S3();
 
 const storage = multerS3({
     s3,
-    bucket: process.env.AWS_S3_BUCKET_NAME,
+    bucket: config.aws.s3BucketName,
     acl: "public-read",
     key: (req, file, cb) => {
         const re = /(?:\.([^.]+))?$/;

@@ -1,14 +1,13 @@
 import passport from "passport";
 import GoogleStrategy from "passport-google-oauth20";
-import { config } from "dotenv";
 import { googleAuthWeb } from "../controller/user.controller";
-config();
+import config from "./env.config";
 
 passport.use(
     new GoogleStrategy.Strategy(
         {
-            clientID: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            clientID: config.google.clientId,
+            clientSecret: config.google.clientSecret,
             callbackURL: "http://localhost:3000/api/v1/users/auth/google/redirect",
         },
         async (accessToken, refreshToken, profile, done) => {
