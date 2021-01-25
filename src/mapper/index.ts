@@ -1,4 +1,3 @@
-import { RecursivePartial } from "../interface/utilsTypes";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
 import _ from "lodash";
@@ -6,12 +5,13 @@ import _ from "lodash";
 //Entities
 import { Post } from "../entity/post.entity";
 import { Comment } from "../entity/comment.entity";
+import { DeepPartial } from "typeorm";
 
 // Config
 TimeAgo.addLocale(en);
 const timeAgo = new TimeAgo();
 
-export const mapCreatePostResponseToEntity = (body, ruser, file): RecursivePartial<Post> => {
+export const mapCreatePostResponseToEntity = (body, ruser, file): DeepPartial<Post> => {
     return {
         title: body.title,
         sensitive: body.sensitive,

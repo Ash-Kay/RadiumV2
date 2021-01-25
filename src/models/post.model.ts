@@ -15,7 +15,5 @@ export default interface Post {
     comments: Comment[];
     vote: Vote[];
     tags: Tag[];
-    width: number;
-    height: number;
     mime: string;
 }

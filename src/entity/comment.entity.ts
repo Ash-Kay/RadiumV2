@@ -48,11 +48,11 @@ export class Comment implements IComment {
     @ManyToOne(() => Post, (post) => post.comments, { nullable: false, onDelete: "CASCADE" })
     post: Post;
 
-    @Column({ unsigned: true, nullable: true })
-    width: number;
+    // @Column({ unsigned: true, nullable: true })
+    // width: number;
 
-    @Column({ unsigned: true, nullable: true })
-    height: number;
+    // @Column({ unsigned: true, nullable: true })
+    // height: number;
 
     @Column({ nullable: true })
     mime: string;

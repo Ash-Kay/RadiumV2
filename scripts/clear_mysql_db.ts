@@ -15,8 +15,3 @@ createConnection().then(async (connection) => {
     connection.close();
     process.exit();
 });
-
-type EntitiesList = {
-    name: string;
-    tableName: string;
-};

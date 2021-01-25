@@ -10,8 +10,8 @@ config();
 // Import Services
 import { CommentService } from "../service/comment.service";
 import { CVote } from "../entity/cvote.entity";
-import { RecursivePartial } from "../interface/utilsTypes";
 import { VoteState } from "../interface/db.enum";
+import { DeepPartial } from "typeorm";
 
 /**
  *  Get comment by id
@@ -110,7 +110,7 @@ export const edit = async (request: Request, response: Response): Promise<void> 
 export const upvote = async (request: Request, response: Response): Promise<void> => {
     const commentService = new CommentService();
 
-    let upvote: RecursivePartial<CVote> = {
+    let upvote: DeepPartial<CVote> = {
         user: {
             id: request.user.id,
         },
@@ -163,7 +163,7 @@ export const removeVote = async (request: Request, response: Response): Promise<
 export const downvote = async (request: Request, response: Response): Promise<void> => {
     const commentService = new CommentService();
 
-    let downvote: RecursivePartial<CVote> = {
+    let downvote: DeepPartial<CVote> = {
         user: {
             id: request.user.id,
         },

@@ -1,10 +1,10 @@
 import { Response } from "express";
 import { Request } from "../interface/express.interface";
 import { makeResponse, makePaginationResponse } from "../interface/response.interface";
-import { RecursivePartial } from "../interface/utilsTypes";
 import { config } from "dotenv";
 import HttpStatusCode from "../utils/httpStatusCode";
 import { VoteState } from "../interface/db.enum";
+import { DeepPartial } from "typeorm";
 import logger from "../utils/logger";
 import fs from "fs";
 config();
@@ -204,7 +204,7 @@ export const permenentRemove = async (request: Request, response: Response): Pro
 export const upvote = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
 
-    let upvote: RecursivePartial<Vote> = {
+    let upvote: DeepPartial<Vote> = {
         user: {
             id: request.user.id,
         },
@@ -257,7 +257,7 @@ export const removeVote = async (request: Request, response: Response): Promise<
 export const downvote = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
 
-    let downvote: RecursivePartial<Vote> = {
+    let downvote: DeepPartial<Vote> = {
         user: {
             id: request.user.id,
         },
@@ -315,7 +315,7 @@ export const comment = async (request: Request, response: Response): Promise<voi
         mediaUrl = (request.file as any).key;
     }
 
-    let comment: RecursivePartial<Comment> = {
+    let comment: DeepPartial<Comment> = {
         message: request.body.message,
         mediaUrl,
         user: {

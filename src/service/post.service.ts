@@ -4,8 +4,7 @@ import mime from "mime/lite";
 import { Post } from "../entity/post.entity";
 import { Vote } from "../entity/vote.entity";
 import { Comment } from "../entity/comment.entity";
-import { getRepository, Repository, UpdateResult, DeleteResult } from "typeorm";
-import { RecursivePartial } from "../interface/utilsTypes";
+import { getRepository, Repository, UpdateResult, DeleteResult, DeepPartial } from "typeorm";
 import { CommentWithUserVote, PostWithUserVoteAndVoteSum, PostWithVoteSum } from "../interface/model.interface";
 
 export class PostService {
@@ -18,9 +17,9 @@ export class PostService {
         this.voteRepository = getRepository(Vote);
         this.commentRepository = getRepository(Comment);
 
-        if (process.platform == "win32") {
-            ffmpeg.setFfprobePath(config.ffPath);
-        }
+        // if (process.platform == "win32") {
+        //     ffmpeg.setFfprobePath(config.ffPath);
+        // }
     }
 
     /**
@@ -28,9 +27,9 @@ export class PostService {
      * @param Post data
      * @returns Post entity
      */
-    async create(data: RecursivePartial<Post>): Promise<Post> {
-        const data1: Post = await this.generatePostMeta(data as Post);
-        return this.postRepository.save(data1);
+    async create(data: DeepPartial<Post>): Promise<Post> {
+        // const data1: Post = await this.generatePostMeta(data as Post);
+        return this.postRepository.save(data);
     }
 
     /**
@@ -202,12 +201,12 @@ export class PostService {
      * @param Comment data
      * @returns Comment Entity
      */
-    async comment(data: RecursivePartial<Comment>): Promise<Comment> {
+    async comment(data: DeepPartial<Comment>): Promise<Comment> {
         if (data.mediaUrl !== null && data.mediaUrl !== undefined) {
-            const data1: Comment = await this.generateCommentMeta(data as Comment);
-            return this.commentRepository.save(data1);
+            // const data1: Comment = await this.generateCommentMeta(data);
+            return this.commentRepository.save(data);
         } else {
-            return this.commentRepository.save(data as Comment);
+            return this.commentRepository.save(data);
         }
     }
 
@@ -251,43 +250,43 @@ export class PostService {
      * @param post
      * @returns post with metadata
      */
-    generatePostMeta(post: Post): Promise<Post> {
-        return new Promise((resolve, reject) => {
-            ffmpeg.ffprobe(config.aws.s3BaseUrl + post.mediaUrl, function (err, metadata) {
-                console.log("post.mediaUrl", post.mediaUrl);
-                if (err) {
-                    reject(err);
-                } else {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    post.width = metadata.streams[0].width!;
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    post.height = metadata.streams[0].height!;
-                    post.mime = mime.getType(post.mediaUrl)!;
-                }
-                resolve(post);
-            });
-        });
-    }
+    // generatePostMeta(post: Post): Promise<Post> {
+    //     return new Promise((resolve, reject) => {
+    //         ffmpeg.ffprobe(config.aws.s3BaseUrl + post.mediaUrl, function (err, metadata) {
+    //             console.log("post.mediaUrl", post.mediaUrl);
+    //             if (err) {
+    //                 reject(err);
+    //             } else {
+    //                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    //                 // post.width = metadata.streams[0].width!;
+    //                 // // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    //                 // post.height = metadata.streams[0].height!;
+    //                 post.mime = mime.getType(post.mediaUrl)!;
+    //             }
+    //             resolve(post);
+    //         });
+    //     });
+    // }
 
     /**
      * Adds metadata to postfeed before saving
      * @param post
      * @returns post with metadata
      */
-    generateCommentMeta(comment: Comment): Promise<Comment> {
-        return new Promise((resolve, reject) => {
-            ffmpeg.ffprobe(config.aws.s3BaseUrl + comment.mediaUrl, function (err, metadata) {
-                if (err) {
-                    reject(err);
-                } else {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    comment.width = metadata.streams[0].width!;
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    comment.height = metadata.streams[0].height!;
-                    comment.mime = mime.getType(comment.mediaUrl)!;
-                }
-                resolve(comment);
-            });
-        });
-    }
+    // generateCommentMeta(comment: Comment): Promise<Comment> {
+    //     return new Promise((resolve, reject) => {
+    //         ffmpeg.ffprobe(config.aws.s3BaseUrl + comment.mediaUrl, function (err, metadata) {
+    //             if (err) {
+    //                 reject(err);
+    //             } else {
+    //                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    //                 // comment.width = metadata.streams[0].width!;
+    //                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    //                 // comment.height = metadata.streams[0].height!;
+    //                 comment.mime = mime.getType(comment.mediaUrl)!;
+    //             }
+    //             resolve(comment);
+    //         });
+    //     });
+    // }
 }

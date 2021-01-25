@@ -1,7 +1,6 @@
 import { Tag } from "../entity/tag.entity";
 import { Post } from "../entity/post.entity";
-import { getRepository, Repository } from "typeorm";
-import { RecursivePartial } from "../interface/utilsTypes";
+import { DeepPartial, getRepository, Repository } from "typeorm";
 
 export class TagService {
     tagRepository: Repository<Tag>;
@@ -16,10 +15,10 @@ export class TagService {
      * @param Post post in which to be insert
      * @returns Created Tag
      */
-    async create(tagText: string, post: RecursivePartial<Post>): Promise<Tag> {
+    async create(tagText: string, post: Post): Promise<Tag> {
         const tag = new Tag();
         tag.tagText = tagText;
-        tag.posts = [post as Post];
+        tag.posts = [post];
         return this.tagRepository.save(tag);
     }
 
@@ -46,7 +45,7 @@ export class TagService {
      * @param Post entity
      * @returns void
      */
-    linkPost(tag: Tag, post: RecursivePartial<Post>): void {
+    linkPost(tag: Tag, post: DeepPartial<Post>): void {
         this.tagRepository.createQueryBuilder().relation(Tag, "posts").of(tag).add(post);
     }
 }
