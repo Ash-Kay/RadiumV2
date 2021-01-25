@@ -1,12 +1,22 @@
 import logger from "../utils/logger";
-import e, { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import HttpStatusCode from "../utils/httpStatusCode";
 import { makeResponse } from "../interface/response.interface";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const error = (error, request: Request, response: Response, next: NextFunction): void => {
-    logger.error("from middle" + error, error.message, error.stack);
+export const error = (error: Error, request: Request, response: Response, next: NextFunction): void => {
+    logger.error("🚨 Error Route 🚨", error.message, error.stack);
     response
         .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
         .send(makeResponse(false, "Something went wrong!!!", {}, "WTF"));
+    process.exit(1);
 };
+
+process
+    .on("unhandledRejection", (reason, p) => {
+        logger.error("🚨 Unhandled Rejection at Promise 🚨", reason, p);
+        process.exit(1);
+    })
+    .on("uncaughtException", (err) => {
+        logger.error("🚨 Uncaught Exception thrown 🚨", err);
+        process.exit(1);
+    });

@@ -1,9 +1,8 @@
 import winston from "winston";
 import kleur from "kleur";
-import path from "path";
 
 const format = winston.format;
-const { combine, timestamp, printf, prettyPrint } = format;
+const { combine, timestamp, printf } = format;
 
 const consoleFormat = printf((info) => {
     return `[${kleur.gray(info.timestamp)}] => ${kleur.underline(info.level)}: ${info.message}`;
@@ -31,7 +30,7 @@ const logger = winston.createLogger({
 });
 
 export class LoggerStream {
-    write(message: string) {
+    write(message: string): void {
         logger.http(message.substring(0, message.lastIndexOf("\n")));
     }
 }

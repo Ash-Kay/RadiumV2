@@ -104,8 +104,6 @@ export const edit = async (request: Request, response: Response): Promise<void> 
     response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment updated successfully", {}));
 };
 
-//!=======================================
-
 /**
  *  Upvote a comment
  * */

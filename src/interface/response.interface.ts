@@ -1,7 +1,7 @@
 interface SendResponse {
     success: boolean;
     message: string;
-    data: object;
+    data: unknown;
     errorCode?: string;
 }
 
@@ -10,7 +10,7 @@ interface SendPaginationResponse extends SendResponse {
     nextPage?: string;
 }
 
-export const makeResponse = (success: boolean, message: string, data: object, errorCode?: string): SendResponse => {
+export const makeResponse = (success: boolean, message: string, data: unknown, errorCode?: string): SendResponse => {
     const response: SendResponse = {
         success,
         message,
@@ -25,7 +25,7 @@ export const makePaginationResponse = (
     message: string,
     previousPage: string,
     nextPage: string,
-    data: object,
+    data: unknown,
     errorCode?: string
 ): SendPaginationResponse => {
     const response: SendPaginationResponse = {

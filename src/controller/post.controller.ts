@@ -63,7 +63,15 @@ export const create = async (request: Request, response: Response): Promise<void
  * */
 export const feed = async (request: Request, response: Response): Promise<void> => {
     const postService = new PostService();
-    let page = +request.query.page!;
+    if (typeof request.query.page !== "string") {
+        logger.warn("Wrong query parameter", request.query.page);
+        response
+            .status(HttpStatusCode.BAD_REQUEST)
+            .send(makeResponse(false, "Wrong query parameter", request.query.page));
+        return;
+    }
+
+    let page = +request.query.page;
 
     if (!page || page <= 0) {
         page = 1;
@@ -303,7 +311,7 @@ export const comment = async (request: Request, response: Response): Promise<voi
     const postService = new PostService();
 
     let mediaUrl;
-    if(request.file) {
+    if (request.file) {
         mediaUrl = (request.file as any).key;
     }
 

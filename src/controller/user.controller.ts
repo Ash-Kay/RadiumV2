@@ -149,12 +149,12 @@ export const googleAuthWeb = async (profile: Profile): Promise<string | void> =>
     if (user === undefined) {
         user = {
             googleId: profile.id,
-            email: profile.emails![0].value,
+            email: profile.emails?.[0].value,
             //Todo find better method to genrate random name
             username: profile.displayName.replace(/ /g, "") + Math.floor(Math.random() * 1000),
-            firsName: profile.name!.givenName,
-            lastName: profile.name!.familyName,
-            avatarUrl: profile.photos![0].value,
+            firsName: profile.name?.givenName,
+            lastName: profile.name?.familyName,
+            avatarUrl: profile.photos?.[0].value,
         };
         await userService.create(user);
     }

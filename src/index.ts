@@ -36,8 +36,15 @@ createConnection().then(() => {
     app.use(morgan("dev", { stream: new LoggerStream() }));
     app.use("/uploads", express.static("uploads"));
     app.use("/test", express.static("test"));
-    app.use(errorhandler());
 
+    if (config.env === "development") {
+        const uploadDir = "./uploads";
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir);
+        }
+
+        app.use(errorhandler());
+    }
     const baseUrl = config.baseURl;
 
     //Routes
