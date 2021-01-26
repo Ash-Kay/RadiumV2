@@ -8,11 +8,12 @@ import {
     Unique,
     DeleteDateColumn,
 } from "typeorm";
-import { Post } from "./post.entity";
-import { Comment } from "./comment.entity";
+
 import { Vote } from "./vote.entity";
-import { Role } from "../interface/db.enum";
+import { Post } from "./post.entity";
 import IUser from "../models/user.model";
+import { Comment } from "./comment.entity";
+import { Role } from "../interface/db.enum";
 
 @Entity("users")
 @Unique(["username"])

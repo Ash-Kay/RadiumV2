@@ -1,22 +1,24 @@
+import fs from "fs";
 import { Response } from "express";
+import { DeepPartial } from "typeorm";
+
+import logger from "../utils/logger";
+import HttpStatusCode from "../utils/httpStatusCode";
+import { UpdateCommentBody } from "../validator/schema";
 import { Request } from "../interface/express.interface";
 import { makeResponse } from "../interface/response.interface";
-import { config } from "dotenv";
-import HttpStatusCode from "../utils/httpStatusCode";
-import logger from "../utils/logger";
-import fs from "fs";
-config();
 
-// Import Services
-import { CommentService } from "../service/comment.service";
+//Entities
 import { CVote } from "../entity/cvote.entity";
+
+//Services
+import { CommentService } from "../service/comment.service";
 import { VoteState } from "../interface/db.enum";
-import { DeepPartial } from "typeorm";
 
 /**
  *  Get comment by id
  * */
-export const one = async (request: Request, response: Response): Promise<void> => {
+export const one = async (request: Request<never>, response: Response): Promise<void> => {
     const commentService = new CommentService();
 
     const comm = await commentService.find(+request.params.id);
@@ -34,7 +36,7 @@ export const one = async (request: Request, response: Response): Promise<void> =
 /**
  *  Soft Delete Comment
  * */
-export const remove = async (request: Request, response: Response): Promise<void> => {
+export const remove = async (request: Request<never>, response: Response): Promise<void> => {
     const commentService = new CommentService();
 
     const result = await commentService.softDelete(+request.params.id, request.user.id);
@@ -54,7 +56,7 @@ export const remove = async (request: Request, response: Response): Promise<void
 /**
  *  Permanently deletes a comment
  * */
-export const permenentRemove = async (request: Request, response: Response): Promise<void> => {
+export const permenentRemove = async (request: Request<never>, response: Response): Promise<void> => {
     const commentService = new CommentService();
 
     const comment = await commentService.findWithSoftDeleted(+request.params.id);
@@ -87,10 +89,10 @@ export const permenentRemove = async (request: Request, response: Response): Pro
 /**
  *  Edit Comment
  * */
-export const edit = async (request: Request, response: Response): Promise<void> => {
+export const edit = async (request: Request<never>, response: Response): Promise<void> => {
     const commentService = new CommentService();
-
-    const result = await commentService.edit(request.body.id, request.user.id, request.body);
+    //TODO VERIFY
+    const result = await commentService.edit(+request.params.id, request.user.id, request.body);
 
     if (result.raw.changedRows === 0) {
         logger.info("Comment NOT found, or Not Authorized", result);
@@ -107,7 +109,7 @@ export const edit = async (request: Request, response: Response): Promise<void> 
 /**
  *  Upvote a comment
  * */
-export const upvote = async (request: Request, response: Response): Promise<void> => {
+export const upvote = async (request: Request<never>, response: Response): Promise<void> => {
     const commentService = new CommentService();
 
     let upvote: DeepPartial<CVote> = {
@@ -148,10 +150,10 @@ export const upvote = async (request: Request, response: Response): Promise<void
 /**
  *  Remove vote of comment
  * */
-export const removeVote = async (request: Request, response: Response): Promise<void> => {
+export const removeVote = async (request: Request<never>, response: Response): Promise<void> => {
     const commentService = new CommentService();
 
-    await commentService.removeVote({ user: request.user.id, comment: request.params.id });
+    await commentService.removeVote({ user: { id: request.user.id }, comment: { id: +request.params.id } });
 
     logger.info(`${request.user.id} REMOVE VOTE comment: ${request.params.id}`);
     response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment vote Removed", {}));
@@ -160,7 +162,7 @@ export const removeVote = async (request: Request, response: Response): Promise<
 /**
  *  Downvote a comment
  * */
-export const downvote = async (request: Request, response: Response): Promise<void> => {
+export const downvote = async (request: Request<never>, response: Response): Promise<void> => {
     const commentService = new CommentService();
 
     let downvote: DeepPartial<CVote> = {
@@ -201,7 +203,7 @@ export const downvote = async (request: Request, response: Response): Promise<vo
 /**
  *  Get total sum of upvote/downvote
  * */
-export const countVote = async (request: Request, response: Response): Promise<void> => {
+export const countVote = async (request: Request<never>, response: Response): Promise<void> => {
     const commentService = new CommentService();
 
     const { sum } = await commentService.getVoteSum(+request.params.id);

@@ -1,24 +1,28 @@
-import { Response } from "express";
-import { Request, AuthHeaderRequest } from "../interface/express.interface";
-import { makeResponse } from "../interface/response.interface";
-import { UserToken } from "../interface/model.interface";
-import { OAuth2Client } from "google-auth-library";
-import HttpStatusCode from "../utils/httpStatusCode";
-import { Profile } from "passport";
+import _ from "lodash";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import config from "../config/env.config";
-import logger from "../utils/logger";
-import _ from "lodash";
+import { Response } from "express";
+import { Profile } from "passport";
+import { OAuth2Client } from "google-auth-library";
 
-// Import Services
+import logger from "../utils/logger";
+import config from "../config/env.config";
+import HttpStatusCode from "../utils/httpStatusCode";
+import { UserToken } from "../interface/model.interface";
+import { makeResponse } from "../interface/response.interface";
+import { Request, AuthHeaderRequest } from "../interface/express.interface";
+import { UserLoginBody, UserSignUpBody, UserUpdateBody } from "../validator/schema";
+
+//Services
 import { UserService } from "../service/user.service";
+
+//Entities
 import { User } from "../entity/user.entity";
 
 /**
  *  Get all users
  * */
-export const all = async (request: Request, response: Response): Promise<void> => {
+export const all = async (request: Request<never>, response: Response): Promise<void> => {
     const userService = new UserService();
     const alluser = await userService.all();
 
@@ -29,7 +33,7 @@ export const all = async (request: Request, response: Response): Promise<void> =
 /**
  *  Signup user, hash the password
  * */
-export const signup = async (request: Request, response: Response): Promise<void> => {
+export const signup = async (request: Request<UserSignUpBody>, response: Response): Promise<void> => {
     const userService = new UserService();
     const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(request.body.password, salt);
@@ -50,7 +54,7 @@ export const signup = async (request: Request, response: Response): Promise<void
 /**
  *  Login, validate email password, returns JWT
  * */
-export const login = async (request: Request, response: Response): Promise<void> => {
+export const login = async (request: Request<UserLoginBody>, response: Response): Promise<void> => {
     const userService = new UserService();
     const user = await userService.findByEmail(request.body.email);
 
@@ -91,7 +95,7 @@ export const login = async (request: Request, response: Response): Promise<void>
 /**
  *  GoogleSignup, Takes google token and create or find existing user then returns token
  * */
-export const loginWithGoogle = async (request: AuthHeaderRequest, response: Response): Promise<void> => {
+export const loginWithGoogle = async (request: AuthHeaderRequest<never>, response: Response): Promise<void> => {
     const userService = new UserService();
     const googleToken = request.headers.authorization.split(" ")[1];
     const client = new OAuth2Client(config.google.clientId);
@@ -184,7 +188,7 @@ export const googleAuthWeb = async (profile: Profile): Promise<string | void> =>
 /**
  *  This runs when google web auth successful
  * */
-export const googleRedirect = async (request: Request, response: Response): Promise<void> => {
+export const googleRedirect = async (request: Request<{ email: string }>, response: Response): Promise<void> => {
     logger.info(`${request.body.email}' LOGGED in`);
     response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", { token: request.token }));
 };
@@ -192,7 +196,7 @@ export const googleRedirect = async (request: Request, response: Response): Prom
 /**
  *  Find one user by ID
  * */
-export const one = async (request: Request, response: Response): Promise<void> => {
+export const one = async (request: Request<never>, response: Response): Promise<void> => {
     const userService = new UserService();
     const user = await userService.findById(+request.params.id);
 
@@ -210,7 +214,7 @@ export const one = async (request: Request, response: Response): Promise<void> =
 /**
  *  Update user
  * */
-export const update = async (request: Request, response: Response): Promise<void> => {
+export const update = async (request: Request<UserUpdateBody>, response: Response): Promise<void> => {
     const userService = new UserService();
     await userService.update(request.user.id, request.body);
 
@@ -221,7 +225,7 @@ export const update = async (request: Request, response: Response): Promise<void
 /**
  *  Get all posts from user
  * */
-export const posts = async (request: Request, response: Response): Promise<void> => {
+export const posts = async (request: Request<never>, response: Response): Promise<void> => {
     const userService = new UserService();
     const user = await userService.loadUserWithPosts(+request.params.id);
 

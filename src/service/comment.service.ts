@@ -1,6 +1,6 @@
-import { Comment } from "../entity/comment.entity";
-import { getRepository, Repository, UpdateResult, DeleteResult } from "typeorm";
 import { CVote } from "../entity/cvote.entity";
+import { Comment } from "../entity/comment.entity";
+import { getRepository, Repository, UpdateResult, DeleteResult, DeepPartial } from "typeorm";
 
 export class CommentService {
     commentRepository: Repository<Comment>;
@@ -72,7 +72,7 @@ export class CommentService {
      * @param {"user":id,"comment":id,"vote":VOTE}
      * @returns Upvote entity
      */
-    vote(data: object): Promise<CVote> {
+    vote(data: DeepPartial<CVote>): Promise<CVote> {
         return this.voteRepository.save(data);
     }
 
@@ -81,7 +81,7 @@ export class CommentService {
      * @param {"user":id,"comment":id}
      * @returns UpdateResult
      */
-    removeVote(data: object): Promise<DeleteResult> {
+    removeVote(data: DeepPartial<CVote>): Promise<DeleteResult> {
         return this.voteRepository.delete(data);
     }
 

@@ -1,18 +1,19 @@
 import { Request as ExpressRequest } from "express";
 import { UserToken } from "./model.interface";
 
-export interface Request extends ExpressRequest {
+export interface Request<T> extends ExpressRequest {
     user: UserToken;
     token: string | null;
+    body: T;
 }
 
-export interface AuthHeaderRequest extends Request {
+export interface AuthHeaderRequest<T> extends Request<T> {
     headers: {
         authorization: string;
     };
 }
 
-export interface OptionalAuthHeaderRequest extends Request {
+export interface OptionalAuthHeaderRequest<T> extends Request<T> {
     headers: {
         authorization?: string;
     };

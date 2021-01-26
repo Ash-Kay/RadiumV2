@@ -1,26 +1,27 @@
 import "reflect-metadata";
-import { handle } from "./handler";
-import helmet from "helmet";
-import errorhandler from "errorhandler";
+
 import fs from "fs";
-
-import express from "express";
-import bodyParser from "body-parser";
-import morgan from "morgan";
 import cors from "cors";
-import compression from "compression";
-
-import config, { verifyConfig } from "./config/env.config";
-import { error } from "./middleware/error";
 import kleur from "kleur";
+import morgan from "morgan";
+import helmet from "helmet";
+import express from "express";
+import passport from "passport";
+import { handle } from "./handler";
+import bodyParser from "body-parser";
+import compression from "compression";
+import errorhandler from "errorhandler";
+import { createConnection } from "typeorm";
+
+import { error } from "./middleware/error";
+import config, { verifyConfig } from "./config/env.config";
 import logger, { LoggerStream } from "./utils/logger";
 
+//Routes
 import userRouter from "./routes/user.route";
 import postRouter from "./routes/post.route";
 import commRouter from "./routes/comment.route";
 
-import { createConnection } from "typeorm";
-import passport from "passport";
 const app = express();
 
 verifyConfig(config);

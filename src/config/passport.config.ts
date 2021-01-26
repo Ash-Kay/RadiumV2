@@ -1,7 +1,8 @@
 import passport from "passport";
 import GoogleStrategy from "passport-google-oauth20";
-import { googleAuthWeb } from "../controller/user.controller";
+
 import config from "./env.config";
+import { googleAuthWeb } from "../controller/user.controller";
 
 passport.use(
     new GoogleStrategy.Strategy(

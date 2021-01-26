@@ -1,4 +1,5 @@
 import { Entity, CreateDateColumn, ManyToOne, UpdateDateColumn, DeleteDateColumn, Column } from "typeorm";
+
 import { User } from "./user.entity";
 import { Comment } from "./comment.entity";
 import ICVote from "../models/cvote.model";

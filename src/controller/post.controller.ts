@@ -1,19 +1,19 @@
 import { Response } from "express";
-import { Request } from "../interface/express.interface";
-import { makeResponse, makePaginationResponse } from "../interface/response.interface";
-import { config } from "dotenv";
-import HttpStatusCode from "../utils/httpStatusCode";
-import { VoteState } from "../interface/db.enum";
 import { DeepPartial } from "typeorm";
-import logger from "../utils/logger";
 import fs from "fs";
-config();
+
+import logger from "../utils/logger";
+import { VoteState } from "../interface/db.enum";
+import HttpStatusCode from "../utils/httpStatusCode";
+import { Request } from "../interface/express.interface";
+import { CreateCommentBody, CreatePostBody } from "../validator/schema";
+import { makeResponse, makePaginationResponse } from "../interface/response.interface";
 
 //Entities
 import { Vote } from "../entity/vote.entity";
 import { Comment } from "../entity/comment.entity";
 
-// Import Services
+//Services
 import { PostService } from "../service/post.service";
 import { TagService } from "../service/tag.service";
 
@@ -31,7 +31,7 @@ import {
 /**
  *  Create post
  * */
-export const create = async (request: Request, response: Response): Promise<void> => {
+export const create = async (request: Request<CreatePostBody>, response: Response): Promise<void> => {
     if (!request.file) {
         response.status(HttpStatusCode.BAD_REQUEST).end(makeResponse(false, "No file found!!!", {}, "NO_FILE_FOUND"));
         return;
@@ -54,14 +54,14 @@ export const create = async (request: Request, response: Response): Promise<void
         }
     });
 
-    logger.info(`User with ID: ${post?.user?.id} CREATED post with ID: ${post.id}`, post);
+    logger.info(`User with ID: ${post.user.id} CREATED post with ID: ${post.id}`, post);
     response.status(HttpStatusCode.CREATED).send(makeResponse(true, "Post Created Sucessfully", post));
 };
 
 /**
  *  Get Feed
  * */
-export const feed = async (request: Request, response: Response): Promise<void> => {
+export const feed = async (request: Request<never>, response: Response): Promise<void> => {
     const postService = new PostService();
     if (typeof request.query.page !== "string") {
         logger.warn("Wrong query parameter", request.query.page);
@@ -117,7 +117,7 @@ export const feed = async (request: Request, response: Response): Promise<void> 
 /**
  *  Get one Post by ID
  * */
-export const one = async (request: Request, response: Response): Promise<void> => {
+export const one = async (request: Request<never>, response: Response): Promise<void> => {
     const postService = new PostService();
 
     if (!request.user) {
@@ -152,7 +152,7 @@ export const one = async (request: Request, response: Response): Promise<void> =
 /**
  *  Soft Delete a post
  * */
-export const remove = async (request: Request, response: Response): Promise<void> => {
+export const remove = async (request: Request<never>, response: Response): Promise<void> => {
     const postService = new PostService();
 
     const result = await postService.softDelete(+request.params.id, request.user.id);
@@ -172,7 +172,7 @@ export const remove = async (request: Request, response: Response): Promise<void
 /**
  *  Permanently deletes a post
  * */
-export const permenentRemove = async (request: Request, response: Response): Promise<void> => {
+export const permenentRemove = async (request: Request<never>, response: Response): Promise<void> => {
     const postService = new PostService();
     const post = await postService.findWithSoftDeleted(+request.params.id);
 
@@ -201,7 +201,7 @@ export const permenentRemove = async (request: Request, response: Response): Pro
 /**
  *  Upvote a post
  * */
-export const upvote = async (request: Request, response: Response): Promise<void> => {
+export const upvote = async (request: Request<never>, response: Response): Promise<void> => {
     const postService = new PostService();
 
     let upvote: DeepPartial<Vote> = {
@@ -242,7 +242,7 @@ export const upvote = async (request: Request, response: Response): Promise<void
 /**
  *  Remove vote of post
  * */
-export const removeVote = async (request: Request, response: Response): Promise<void> => {
+export const removeVote = async (request: Request<never>, response: Response): Promise<void> => {
     const postService = new PostService();
 
     await postService.removeVote({ user: request.user.id, post: request.params.id });
@@ -254,7 +254,7 @@ export const removeVote = async (request: Request, response: Response): Promise<
 /**
  *  Downvote a post
  * */
-export const downvote = async (request: Request, response: Response): Promise<void> => {
+export const downvote = async (request: Request<never>, response: Response): Promise<void> => {
     const postService = new PostService();
 
     let downvote: DeepPartial<Vote> = {
@@ -295,7 +295,7 @@ export const downvote = async (request: Request, response: Response): Promise<vo
 /**
  *  Get total sum of upvote/downvote
  * */
-export const countVote = async (request: Request, response: Response): Promise<void> => {
+export const countVote = async (request: Request<never>, response: Response): Promise<void> => {
     const postService = new PostService();
 
     const { sum } = await postService.getVoteSum(+request.params.id);
@@ -307,11 +307,12 @@ export const countVote = async (request: Request, response: Response): Promise<v
 /**
  *  Comment on post
  * */
-export const comment = async (request: Request, response: Response): Promise<void> => {
+export const comment = async (request: Request<CreateCommentBody>, response: Response): Promise<void> => {
     const postService = new PostService();
 
     let mediaUrl;
     if (request.file) {
+        //TODO VERIFY FILES or Have Interface
         mediaUrl = (request.file as any).key;
     }
 
@@ -338,7 +339,7 @@ export const comment = async (request: Request, response: Response): Promise<voi
 /**
  *  All comment on a post
  * */
-export const allComments = async (request: Request, response: Response): Promise<void> => {
+export const allComments = async (request: Request<never>, response: Response): Promise<void> => {
     const postService = new PostService();
     if (!request.user) {
         const rawComms: Comment[] = await postService.getAllcomment(+request.params.id);

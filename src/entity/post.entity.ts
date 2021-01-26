@@ -17,7 +17,7 @@ import { Tag } from "./tag.entity";
 import IPost from "../models/post.model";
 
 @Entity("posts")
-export class Post {
+export class Post implements IPost {
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;
 
@@ -31,7 +31,7 @@ export class Post {
     sensitive: boolean;
 
     @CreateDateColumn({ type: "timestamp" })
-    createdAt?: Date;
+    createdAt: Date;
 
     @UpdateDateColumn({ type: "timestamp" })
     updatedAt: Date;
@@ -53,12 +53,6 @@ export class Post {
     })
     @JoinTable({ name: "post_tag" })
     tags: Tag[];
-
-    // @Column({ unsigned: true })
-    // width: number;
-
-    // @Column({ unsigned: true })
-    // height: number;
 
     @Column()
     mime: string;

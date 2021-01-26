@@ -1,56 +1,124 @@
-import Joi from "@hapi/joi";
+import {
+    ArrayMaxSize,
+    ArrayUnique,
+    IsArray,
+    IsBoolean,
+    IsDateString,
+    IsEmail,
+    IsNumber,
+    IsOptional,
+    IsString,
+    Length,
+    MinLength,
+} from "class-validator";
 
-export const userRegister = {
-    username: Joi.string().min(3).max(30).required(),
-    email: Joi.string().email({ minDomainSegments: 2 }).required(),
-    password: Joi.string().min(5).required(),
-    firstName: Joi.string(),
-    lastName: Joi.string(),
-    dob: Joi.date(),
-    country: Joi.string(),
-};
+export class UserSignUpBody {
+    @Length(3, 30)
+    username: string;
 
-export const userLogin = {
-    email: Joi.string().email({ minDomainSegments: 2 }).required(),
-    password: Joi.string().min(5).required(),
-};
+    @IsEmail()
+    email: string;
 
-export const userUpdate = {
-    username: Joi.string().min(3).max(30),
-    firstName: Joi.string(),
-    lastName: Joi.string(),
-    country: Joi.string(),
-    avatarUrl: Joi.string(),
-};
+    @IsString()
+    @MinLength(5)
+    password: string;
 
-export const createPost = {
-    title: Joi.string(),
-    sensitive: Joi.boolean(),
-    tags: Joi.array().items(Joi.string().min(1).max(15)),
-};
+    @IsOptional()
+    @IsString()
+    firstName?: string;
 
-export const createComment = {
-    message: Joi.string().min(1).required(),
-    tagTo: Joi.string().min(1),
-};
+    @IsOptional()
+    @IsString()
+    lastName: string;
 
-export const updateComment = {
-    message: Joi.string().min(1).required(),
-    tagTo: Joi.string().min(1),
-};
+    @IsOptional()
+    @IsDateString()
+    dob?: Date;
 
-export const none = {};
+    @IsOptional()
+    @IsString()
+    country?: string;
+}
+
+export class UserLoginBody {
+    @IsEmail()
+    email: string;
+
+    @IsString()
+    @MinLength(5)
+    password: string;
+}
+
+export class UserUpdateBody {
+    @IsOptional()
+    @Length(3, 30)
+    username?: string;
+
+    @IsOptional()
+    @IsString()
+    firstName?: string;
+
+    @IsOptional()
+    @IsString()
+    lastName?: string;
+
+    @IsOptional()
+    @IsString()
+    country?: string;
+
+    @IsOptional()
+    @IsString()
+    avatarUrl?: string;
+}
+
+export class CreatePostBody {
+    @IsOptional()
+    @IsString()
+    title?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    sensitive?: boolean;
+
+    @IsOptional()
+    @IsArray()
+    @ArrayMaxSize(5)
+    @ArrayUnique()
+    @IsString({ each: true })
+    @Length(1, 15, { each: true })
+    tags?: string[];
+}
+
+export class CreateCommentBody {
+    @IsString()
+    @MinLength(5)
+    message: string;
+
+    @IsOptional()
+    @IsNumber()
+    tagTo?: number;
+}
+
+export class UpdateCommentBody {
+    @IsString()
+    @MinLength(5)
+    message: string;
+
+    @IsOptional()
+    @IsNumber()
+    tagTo?: number;
+}
 
 /**
  *  Objects
  * */
 
-export const googleTokenPayload = {
-    googleId: Joi.string().required(),
-    name: Joi.string().required(),
-    email: Joi.string().required(),
-    username: Joi.string().required(),
-    firsName: Joi.string().required(),
-    lastName: Joi.string().required(),
-    avatarUrl: Joi.string().required(),
-};
+// export const googleTokenPayload = {
+//     googleId: Joi.string().required(),
+//     name: Joi.string().required(),
+//     email: Joi.string().required(),
+//     username: Joi.string().required(),
+//     firsName: Joi.string().required(),
+//     lastName: Joi.string().required(),
+//     avatarUrl: Joi.string().required(),
+// };

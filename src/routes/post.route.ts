@@ -1,14 +1,16 @@
-import { Router } from "express";
-import * as PostController from "../controller/post.controller";
-import { validateRequest } from "../validator/validator";
-import * as schema from "../validator/schema";
-const router = Router();
-import multer from "multer";
-import multerS3 from "multer-s3";
 import aws from "aws-sdk";
-import config from "../config/env.config";
-import { verifyAuth, verifyAuthorization, verifyOptionalAuth } from "../middleware/auth";
+import multer from "multer";
 import crypto from "crypto";
+import { Router } from "express";
+import multerS3 from "multer-s3";
+
+import config from "../config/env.config";
+import * as schema from "../validator/schema";
+import { validateRequest } from "../validator/validator";
+import * as PostController from "../controller/post.controller";
+import { verifyAuth, verifyAuthorization, verifyOptionalAuth } from "../middleware/auth";
+
+const router = Router();
 
 aws.config.update({
     secretAccessKey: config.aws.secrectAccessKey,
@@ -63,7 +65,7 @@ const fileFilter = (req, file, cb): void => {
 // file size 50MB= 1024*1024*50 = 52428800
 const upload = multer({ storage, limits, fileFilter });
 
-router.post("/", verifyAuth, upload.single("file"), validateRequest(schema.createPost), PostController.create);
+router.post("/", verifyAuth, upload.single("file"), validateRequest(schema.CreatePostBody), PostController.create);
 router.get("/", verifyOptionalAuth, PostController.feed);
 router.get("/:id", verifyOptionalAuth, PostController.one);
 router.get("/:id/vote", PostController.countVote);
@@ -76,7 +78,7 @@ router.post(
     "/:id/comment",
     verifyAuth,
     upload.single("file"),
-    validateRequest(schema.createComment),
+    validateRequest(schema.CreateCommentBody),
     PostController.comment
 );
 router.get("/:id/comment", verifyOptionalAuth, PostController.allComments);

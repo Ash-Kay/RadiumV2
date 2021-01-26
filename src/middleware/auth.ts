@@ -5,7 +5,7 @@ import HttpStatusCode from "../utils/httpStatusCode";
 import { Request, AuthHeaderRequest, OptionalAuthHeaderRequest } from "../interface/express.interface";
 import config from "../config/env.config";
 
-export const verifyAuth = (request: AuthHeaderRequest, response: Response, next: NextFunction): void => {
+export const verifyAuth = (request: AuthHeaderRequest<unknown>, response: Response, next: NextFunction): void => {
     try {
         const token = request.headers.authorization.split(" ")[1];
         const user = jwt.verify(token, config.jwtKey);
@@ -20,7 +20,7 @@ export const verifyAuth = (request: AuthHeaderRequest, response: Response, next:
 };
 
 export const verifyOptionalAuth = (
-    request: OptionalAuthHeaderRequest,
+    request: OptionalAuthHeaderRequest<unknown>,
     response: Response,
     next: NextFunction
 ): void => {
@@ -43,7 +43,7 @@ export const verifyOptionalAuth = (
  * Verifies if User have right permission
  * verifyAuth must be present before this route
  * */
-export const verifyAuthorization = (request: Request, response: Response, next: NextFunction): void => {
+export const verifyAuthorization = (request: Request<unknown>, response: Response, next: NextFunction): void => {
     try {
         if (request.user.role !== "ADMIN") {
             logger.error("Not Authorized");

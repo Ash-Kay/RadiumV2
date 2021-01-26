@@ -61,7 +61,7 @@ export class UserService {
      * @returns userDetails
      * @returns Updated User
      */
-    update(id: number, data: User): Promise<UpdateResult | undefined> {
+    update(id: number, data: Partial<User>): Promise<UpdateResult | undefined> {
         return this.userRepository.update(id, data);
     }
 

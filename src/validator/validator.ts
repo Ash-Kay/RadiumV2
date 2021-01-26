@@ -1,23 +1,19 @@
-import Joi from "@hapi/joi";
+import { plainToClass } from "class-transformer";
+import { validateOrReject } from "class-validator";
 import { Request, Response, NextFunction } from "express";
 
-export const validateRequest = (type) => {
-    return (request: Request, response: Response, next: NextFunction): void => {
-        const validResponse = Joi.validate(request.body, type);
-        if (validResponse.error) {
-            response.status(400).send(validResponse);
+export const validateRequest = (bodyClass: any) => {
+    return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
+        const result = plainToClass(bodyClass, request.body);
+
+        try {
+            await validateOrReject(result, { whitelist: true, forbidNonWhitelisted: true });
+            request.body = result;
+            console.log("result", result);
+            next();
+        } catch (error) {
+            response.status(400).send(error);
             return;
         }
-
-        request.body = validResponse.value;
-        next();
     };
-};
-
-export const validateObject = (object, type): boolean => {
-    const validResponse = Joi.validate(object, type);
-    if (validResponse.error) {
-        return false;
-    }
-    return true;
 };
