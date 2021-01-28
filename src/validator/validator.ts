@@ -9,7 +9,6 @@ export const validateRequest = (bodyClass: any) => {
         try {
             await validateOrReject(result, { whitelist: true, forbidNonWhitelisted: true });
             request.body = result;
-            console.log("result", result);
             next();
         } catch (error) {
             response.status(400).send(error);

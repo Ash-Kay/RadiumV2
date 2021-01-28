@@ -1,21 +1,28 @@
+import _ from "lodash";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
-import _ from "lodash";
 
 //Entities
 import { Post } from "../entity/post.entity";
 import { Comment } from "../entity/comment.entity";
 import { DeepPartial } from "typeorm";
+import { UserToken } from "../interface/model.interface";
+import { CreatePostBody } from "../validator/schema";
 
 // Config
 TimeAgo.addLocale(en);
 const timeAgo = new TimeAgo();
 
-export const mapCreatePostResponseToEntity = (body, ruser, file): DeepPartial<Post> => {
+export const mapCreatePostResponseToEntity = (
+    body: CreatePostBody,
+    ruser: UserToken,
+    file: Express.Multer.File
+): DeepPartial<Post> => {
     return {
         title: body.title,
         sensitive: body.sensitive,
-        mediaUrl: file.key.replace(/\\/g, "/"),
+        mediaUrl: file.destination,
+        mime: file.mimetype,
         user: {
             id: ruser.id,
         },

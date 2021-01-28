@@ -1,12 +1,12 @@
 import aws from "aws-sdk";
 import multer from "multer";
 import crypto from "crypto";
-import { Router } from "express";
-import multerS3 from "multer-s3";
+import { Router, Request } from "express";
 
 import config from "../config/env.config";
 import * as schema from "../validator/schema";
 import { validateRequest } from "../validator/validator";
+import sharpS3Storage from "../utils/sharpS3StorageEngine";
 import * as PostController from "../controller/post.controller";
 import { verifyAuth, verifyAuthorization, verifyOptionalAuth } from "../middleware/auth";
 
@@ -20,31 +20,42 @@ aws.config.update({
 
 const s3 = new aws.S3();
 
-const storage = multerS3({
+const storage = sharpS3Storage({
     s3,
-    bucket: config.aws.s3BucketName,
-    acl: "public-read",
-    key: (req, file, cb) => {
-        const re = /(?:\.([^.]+))?$/;
-        const regRes = re.exec(file.originalname);
+    Bucket: config.aws.s3BucketName,
+    ACL: "public-read",
+    Key: (request: Request, file: Express.Multer.File, cb: (error?: Error, fielName?: string) => void) => {
+        console.log("file in stoage route", file);
 
-        if (regRes) {
-            const ext = regRes[1];
-            const radomFileName =
-                crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") + "." + ext;
-            cb(null, radomFileName);
+        if (file.mimetype.startsWith("image")) {
+            console.log(" key is image no ext added");
+            return cb(undefined, crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") + ".webp");
         } else {
-            cb(new Error("Invalid File/ Invalid File Extension"), "");
+            const re = /(?:\.([^.]+))?$/;
+            const regRes = re.exec(file.originalname);
+            if (regRes) {
+                const ext = regRes[1];
+                const radomFileName =
+                    crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") + "." + ext;
+                cb(undefined, radomFileName);
+            } else {
+                cb(new Error("Invalid File/ Invalid File Extension"));
+            }
         }
     },
 });
 
+// file size 5MB= 1024*1024*5 = 5242880
 const limits = {
     files: 1,
-    fileSize: 52428800,
+    fileSize: 5242880,
 };
 
-const fileFilter = (req, file, cb): void => {
+const fileFilter = (
+    request: Request,
+    file: Express.Multer.File,
+    cb: (error?: Error, isSuccess?: boolean) => void
+): void => {
     const allowedMimes = [
         "image/jpeg",
         "image/pjpeg",
@@ -56,13 +67,12 @@ const fileFilter = (req, file, cb): void => {
     ];
 
     if (allowedMimes.includes(file.mimetype)) {
-        cb(null, true);
+        cb(undefined, true);
     } else {
         cb(new Error("Invalid file type. Only jpg, png and gif image files are allowed."));
     }
 };
 
-// file size 50MB= 1024*1024*50 = 52428800
 const upload = multer({ storage, limits, fileFilter });
 
 router.post("/", verifyAuth, upload.single("file"), validateRequest(schema.CreatePostBody), PostController.create);
