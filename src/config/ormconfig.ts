@@ -1,6 +1,7 @@
-import config from "./src/config/env.config";
+import { ConnectionOptions } from "typeorm";
+import config from "./env.config";
 
-module.exports = {
+export default <ConnectionOptions>{
     type: "mysql",
     host: config.database.host,
     port: 3306,

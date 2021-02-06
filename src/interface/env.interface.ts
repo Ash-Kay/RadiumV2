@@ -1,3 +1,5 @@
+import { LoggerOptions } from "typeorm";
+
 export interface EnvConfig {
     env: string;
     port: number;
@@ -14,7 +16,7 @@ interface Database {
     username: string;
     password: string;
     name: string;
-    logging: string;
+    logging: LoggerOptions;
 }
 interface Google {
     clientId: string;

@@ -14,6 +14,7 @@ import errorhandler from "errorhandler";
 import { createConnection } from "typeorm";
 
 import { error } from "./middleware/error";
+import ormConfig from "./config/ormconfig";
 import logger, { LoggerStream } from "./utils/logger";
 import config, { verifyConfig } from "./config/env.config";
 
@@ -26,7 +27,7 @@ const app = express();
 
 verifyConfig(config);
 
-createConnection();
+createConnection(ormConfig);
 
 app.use(passport.initialize({ userProperty: "token" }));
 app.use(handle.limit);

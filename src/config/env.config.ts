@@ -1,4 +1,5 @@
 import { config } from "dotenv";
+import { LoggerOptions } from "typeorm";
 import { EnvConfig } from "../interface/env.interface";
 config();
 
@@ -11,7 +12,7 @@ const configObject: EnvConfig = {
         username: process.env.DB_USER || "",
         password: process.env.DB_PASS || "",
         name: process.env.DB_DBNAME || "",
-        logging: process.env.DB_LOGGING || "",
+        logging: (process.env.DB_LOGGING as LoggerOptions) || false,
     },
 
     baseURl: process.env.BASE_URL || "",
