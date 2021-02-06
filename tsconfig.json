@@ -5,13 +5,14 @@
         "esModuleInterop": true,
         "module": "commonjs",
         "moduleResolution": "node",
-        "outDir": "./build",
+        "outDir": "build",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "sourceMap": true,
         "strictNullChecks": true,
         "skipLibCheck": true,
+        // "rootDir": "./",
         "typeRoots": ["./src/interface", "./node_modules/@types"]
     },
-    "exclude": ["node_modules", "test"]
+    "exclude": ["node_modules", "build"]
 }

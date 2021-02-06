@@ -43,3 +43,11 @@ export interface CommentWithUserVote extends Omit<Comment, "post" | "vote"> {
     username: string;
     avatarUrl: string;
 }
+
+export interface CommentWithUserVoteAndVoteSum extends Omit<Comment, "post" | "vote"> {
+    vote: number;
+    voteSum: number;
+    userId: number;
+    username: string;
+    avatarUrl: string;
+}

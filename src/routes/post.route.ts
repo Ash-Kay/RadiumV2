@@ -5,7 +5,7 @@ import { Router, Request } from "express";
 
 import config from "../config/env.config";
 import * as schema from "../validator/schema";
-import { validateRequest } from "../validator/validator";
+import { validateParams, validateRequest } from "../validator/validator";
 import sharpS3Storage from "../utils/sharpS3StorageEngine";
 import * as PostController from "../controller/post.controller";
 import { verifyAuth, verifyAuthorization, verifyOptionalAuth } from "../middleware/auth";
@@ -25,10 +25,7 @@ const storage = sharpS3Storage({
     Bucket: config.aws.s3BucketName,
     ACL: "public-read",
     Key: (request: Request, file: Express.Multer.File, cb: (error?: Error, fielName?: string) => void) => {
-        console.log("file in stoage route", file);
-
         if (file.mimetype.startsWith("image")) {
-            console.log(" key is image no ext added");
             return cb(undefined, crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") + ".webp");
         } else {
             const re = /(?:\.([^.]+))?$/;
@@ -77,17 +74,24 @@ const upload = multer({ storage, limits, fileFilter });
 
 router.post("/", verifyAuth, upload.single("file"), validateRequest(schema.CreatePostBody), PostController.create);
 router.get("/", verifyOptionalAuth, PostController.feed);
-router.get("/:id", verifyOptionalAuth, PostController.one);
-router.get("/:id/vote", PostController.countVote);
-router.delete("/:id", verifyAuth, PostController.remove);
-router.delete("/:id/permenent", verifyAuth, verifyAuthorization, PostController.permenentRemove);
-router.post("/:id/upvote", verifyAuth, PostController.upvote);
-router.post("/:id/downvote", verifyAuth, PostController.downvote);
-router.delete("/:id/removevote", verifyAuth, PostController.removeVote);
+router.get("/:id", verifyOptionalAuth, validateParams(schema.ParamId), PostController.one);
+router.get("/:id/vote", validateParams(schema.ParamId), PostController.countVote);
+router.delete("/:id", verifyAuth, validateParams(schema.ParamId), PostController.remove);
+router.delete(
+    "/:id/permenent",
+    verifyAuth,
+    verifyAuthorization,
+    validateParams(schema.ParamId),
+    PostController.permenentRemove
+);
+router.post("/:id/upvote", verifyAuth, validateParams(schema.ParamId), PostController.upvote);
+router.post("/:id/downvote", verifyAuth, validateParams(schema.ParamId), PostController.downvote);
+router.delete("/:id/removevote", verifyAuth, validateParams(schema.ParamId), PostController.removeVote);
 router.post(
     "/:id/comment",
     verifyAuth,
     upload.single("file"),
+    validateParams(schema.ParamId),
     validateRequest(schema.CreateCommentBody),
     PostController.comment
 );

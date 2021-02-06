@@ -16,8 +16,6 @@ class SharpS3StorageEngine implements StorageEngine {
         file: Express.MulterS3.File,
         cb: (error?: Error, info?: Partial<Express.Multer.File>) => void
     ): void {
-        console.log("file in _handleFile", file);
-
         const { opts } = this;
         const { mimetype, stream } = file;
         const params: S3.Types.PutObjectRequest = {
@@ -65,7 +63,6 @@ class SharpS3StorageEngine implements StorageEngine {
         params.Body = compressedFile;
 
         this.opts.s3.upload(params, (err: Error, data: ManagedUpload.SendData) => {
-            console.log(err, data);
             if (err) {
                 cb(err, undefined);
             } else {
@@ -80,7 +77,6 @@ class SharpS3StorageEngine implements StorageEngine {
         cb: (error?: Error, info?: Partial<Express.Multer.File>) => void
     ) {
         this.opts.s3.upload(params, (err: Error, data: ManagedUpload.SendData) => {
-            console.log(err, data);
             if (err) {
                 cb(err, undefined);
             } else {

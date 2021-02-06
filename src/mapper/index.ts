@@ -3,11 +3,16 @@ import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
 
 //Entities
+import { DeepPartial } from "typeorm";
 import { Post } from "../entity/post.entity";
 import { Comment } from "../entity/comment.entity";
-import { DeepPartial } from "typeorm";
-import { UserToken } from "../interface/model.interface";
-import { CreatePostBody } from "../validator/schema";
+import { CreateCommentBody, CreatePostBody } from "../validator/schema";
+import {
+    UserToken,
+    PostWithVoteSum,
+    PostWithUserVoteAndVoteSum,
+    CommentWithUserVoteAndVoteSum,
+} from "../interface/model.interface";
 
 // Config
 TimeAgo.addLocale(en);
@@ -29,8 +34,7 @@ export const mapCreatePostResponseToEntity = (
     };
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const mapGetFeedSqlToResponse = (rawPosts) => {
+export const mapGetFeedSqlToResponse = (rawPosts: PostWithVoteSum[]): DeepPartial<Post[]> => {
     return _.chain(rawPosts)
         .map((e) =>
             _.assign(e, {
@@ -44,8 +48,7 @@ export const mapGetFeedSqlToResponse = (rawPosts) => {
         .value();
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const mapGetFeedWithVoteSqlToResponse = (rawPosts) => {
+export const mapGetFeedWithVoteSqlToResponse = (rawPosts: PostWithUserVoteAndVoteSum[]) => {
     return _.chain(rawPosts)
         .map((e) =>
             _.assign(e, {
@@ -60,7 +63,7 @@ export const mapGetFeedWithVoteSqlToResponse = (rawPosts) => {
         .value();
 };
 
-export const mapGetPostCommentSqlToResponse = (rawComms): Comment[] => {
+export const mapGetPostCommentSqlToResponse = (rawComms: Comment[]): Comment[] => {
     return _.map(rawComms, (e) =>
         _.assign(e, {
             timeago: timeAgo.format(new Date(e.createdAt).getTime(), "twitter"),
@@ -68,8 +71,7 @@ export const mapGetPostCommentSqlToResponse = (rawComms): Comment[] => {
     );
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const mapGetPostCommentWithVoteSqlToResponse = (rawComms) => {
+export const mapGetPostCommentWithVoteSqlToResponse = (rawComms: CommentWithUserVoteAndVoteSum[]) => {
     return _.chain(rawComms)
         .map((e) =>
             _.assign(e, {
@@ -83,8 +85,7 @@ export const mapGetPostCommentWithVoteSqlToResponse = (rawComms) => {
         .value();
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const mapGetOneWithVotePostSqlToResponse = (rawPost) => {
+export const mapGetOneWithVotePostSqlToResponse = (rawPost: PostWithUserVoteAndVoteSum[]) => {
     return _.chain(rawPost)
         .map((e) =>
             _.assign(e, {
@@ -99,8 +100,7 @@ export const mapGetOneWithVotePostSqlToResponse = (rawPost) => {
         .value()[0];
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const mapGetOnePostSqlToResponse = (rawPost) => {
+export const mapGetOnePostSqlToResponse = (rawPost: PostWithVoteSum[]) => {
     return _.chain(rawPost)
         .map((e) =>
             _.assign(e, {
@@ -112,4 +112,25 @@ export const mapGetOnePostSqlToResponse = (rawPost) => {
         )
         .map((e) => _.omit(e, ["userId", "username", "avatarUrl"]))
         .value()[0];
+};
+
+export const mapCreatCommentResponseToEntity = (
+    body: CreateCommentBody,
+    postId: number,
+    ruser: UserToken,
+    file?: Express.Multer.File
+): DeepPartial<Comment> => {
+    return {
+        message: body.message,
+        mediaUrl: file?.destination,
+        user: {
+            id: ruser.id,
+        },
+        post: {
+            id: postId,
+        },
+        tagTo: {
+            id: body.tagTo,
+        },
+    };
 };

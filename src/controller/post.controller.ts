@@ -19,13 +19,14 @@ import { TagService } from "../service/tag.service";
 
 //Mapper
 import {
-    mapCreatePostResponseToEntity,
     mapGetFeedSqlToResponse,
-    mapGetFeedWithVoteSqlToResponse,
-    mapGetPostCommentSqlToResponse,
-    mapGetPostCommentWithVoteSqlToResponse,
-    mapGetOneWithVotePostSqlToResponse,
     mapGetOnePostSqlToResponse,
+    mapCreatePostResponseToEntity,
+    mapGetPostCommentSqlToResponse,
+    mapCreatCommentResponseToEntity,
+    mapGetFeedWithVoteSqlToResponse,
+    mapGetOneWithVotePostSqlToResponse,
+    mapGetPostCommentWithVoteSqlToResponse,
 } from "../mapper";
 
 /**
@@ -122,6 +123,11 @@ export const one = async (request: Request<never>, response: Response): Promise<
 
     if (!request.user) {
         const rawPost = await postService.findPostWithVoteSum(+request.params.id);
+        if (!rawPost) {
+            logger.info(`Post with ID: ${request.params.id} not found`);
+            response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(true, "Post not found!", {}));
+            return;
+        }
         const post = mapGetOnePostSqlToResponse(rawPost);
 
         if (!post) {
@@ -135,6 +141,11 @@ export const one = async (request: Request<never>, response: Response): Promise<
         response.status(HttpStatusCode.OK).send(makeResponse(true, "Post fetched sucessfully!", post));
     } else {
         const rawPost = await postService.findPostWithVoteAndVoteSum(+request.params.id, request.user.id);
+        if (!rawPost) {
+            logger.info(`Post with ID: ${request.params.id} not found`);
+            response.status(HttpStatusCode.NOT_FOUND).send(makeResponse(true, "Post not found!", {}));
+            return;
+        }
         const post = mapGetOneWithVotePostSqlToResponse(rawPost);
 
         if (!post) {
@@ -166,7 +177,7 @@ export const remove = async (request: Request<never>, response: Response): Promi
     }
 
     logger.info(`Post removed with ID: ${request.params.id} by user with ID: ${request.user.id}`);
-    response.send(makeResponse(true, "Post deleted", {}));
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post deleted", {}));
 };
 
 /**
@@ -310,27 +321,9 @@ export const countVote = async (request: Request<never>, response: Response): Pr
 export const comment = async (request: Request<CreateCommentBody>, response: Response): Promise<void> => {
     const postService = new PostService();
 
-    let mediaUrl;
-    if (request.file) {
-        //TODO VERIFY FILES or Have Interface
-        mediaUrl = (request.file as any).key;
-    }
+    const data = mapCreatCommentResponseToEntity(request.body, +request.params.id, request.user, request.file);
 
-    let comment: DeepPartial<Comment> = {
-        message: request.body.message,
-        mediaUrl,
-        user: {
-            id: request.user.id,
-        },
-        post: {
-            id: +request.params.id,
-        },
-        tagTo: {
-            id: request.body.tagTo,
-        },
-    };
-
-    comment = await postService.comment(comment);
+    const comment = await postService.comment(data);
 
     logger.info(`User with ID:${request.user.id} COMMENTED on ${request.params.id}, commId: ${comment.id}`, comment);
     response.status(HttpStatusCode.CREATED).send(makeResponse(true, "commented sccessfully", comment));

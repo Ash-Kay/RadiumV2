@@ -16,3 +16,18 @@ export const validateRequest = (bodyClass: any) => {
         }
     };
 };
+
+export const validateParams = (paramsClass: any) => {
+    return async (request: any, response: Response, next: NextFunction): Promise<void> => {
+        const params = plainToClass(paramsClass, request.params);
+
+        try {
+            await validateOrReject(params, { whitelist: true, forbidNonWhitelisted: true });
+            request.params = params;
+            next();
+        } catch (error) {
+            response.status(400).send(error);
+            return;
+        }
+    };
+};

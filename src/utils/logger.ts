@@ -2,7 +2,7 @@ import winston from "winston";
 import kleur from "kleur";
 
 const format = winston.format;
-const { combine, timestamp, printf } = format;
+const { combine, timestamp, printf, colorize, json, metadata, uncolorize } = format;
 
 const consoleFormat = printf((info) => {
     return `[${kleur.gray(info.timestamp)}] => ${kleur.underline(info.level)}: ${info.message}`;
@@ -10,22 +10,21 @@ const consoleFormat = printf((info) => {
 
 const options = {
     file: {
-        level: "info",
+        level: "silly",
         filename: "logs/logger.log",
         handleExceptions: true,
         maxsize: 5242880, // 5MB
         maxFiles: 5,
-        format: combine(timestamp(), winston.format.json()),
+        format: combine(uncolorize(), timestamp(), metadata(), json()),
     },
     console: {
-        level: "debug",
+        level: "silly",
         handleExceptions: true,
-        format: combine(winston.format.colorize(), timestamp(), consoleFormat),
+        format: combine(metadata(), colorize(), timestamp(), consoleFormat),
     },
 };
 
 const logger = winston.createLogger({
-    format: format.combine(format.metadata({ fillExcept: ["message", "level", "timestamp", "label"] })),
     transports: [new winston.transports.File(options.file), new winston.transports.Console(options.console)],
 });
 

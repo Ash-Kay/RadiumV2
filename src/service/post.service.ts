@@ -2,7 +2,11 @@ import { Post } from "../entity/post.entity";
 import { Vote } from "../entity/vote.entity";
 import { Comment } from "../entity/comment.entity";
 import { getRepository, Repository, UpdateResult, DeleteResult, DeepPartial } from "typeorm";
-import { CommentWithUserVote, PostWithUserVoteAndVoteSum, PostWithVoteSum } from "../interface/model.interface";
+import {
+    PostWithVoteSum,
+    PostWithUserVoteAndVoteSum,
+    CommentWithUserVoteAndVoteSum,
+} from "../interface/model.interface";
 
 export class PostService {
     postRepository: Repository<Post>;
@@ -93,9 +97,9 @@ export class PostService {
     /**
      * Return posts with user and voteSum
      * @param id
-     * @returns post with user inside
+     * @returns Array with 1 element, post with user inside
      */
-    findPostWithVoteSum(postId: number): Promise<Post | undefined> {
+    findPostWithVoteSum(postId: number): Promise<PostWithVoteSum[] | undefined> {
         return this.postRepository.query(
             `SELECT op.*, users.username, users.avatarUrl, (
                 SELECT SUM(vote) FROM votes 
@@ -114,7 +118,7 @@ export class PostService {
      * @param id
      * @returns post with user inside
      */
-    findPostWithVoteAndVoteSum(postId: number, userId: number): Promise<Post | undefined> {
+    findPostWithVoteAndVoteSum(postId: number, userId: number): Promise<PostWithUserVoteAndVoteSum[] | undefined> {
         return this.postRepository.query(
             `SELECT op.*, users.username, users.avatarUrl, (
                 SELECT vote FROM votes
@@ -221,7 +225,7 @@ export class PostService {
      * @param postId of post
      * @returns all comments
      */
-    getAllCommentsWithVotes(postId: number, userId: number): Promise<CommentWithUserVote[]> {
+    getAllCommentsWithVotes(postId: number, userId: number): Promise<CommentWithUserVoteAndVoteSum[]> {
         return this.postRepository.query(
             `SELECT oc.*, users.username, users.avatarUrl, 
             (SELECT vote FROM cvotes WHERE cvotes.userId =? AND cvotes.commentId = oc.id) as vote,

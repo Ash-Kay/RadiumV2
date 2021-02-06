@@ -13,10 +13,8 @@ export const error = (error: Error, request: Request, response: Response, next: 
 
 process
     .on("unhandledRejection", (reason, p) => {
-        logger.error("🚨 Unhandled Rejection at Promise 🚨", reason, p);
-        process.exit(1);
+        throw reason;
     })
     .on("uncaughtException", (err) => {
-        logger.error("🚨 Uncaught Exception thrown 🚨", err);
         process.exit(1);
     });

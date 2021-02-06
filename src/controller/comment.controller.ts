@@ -50,7 +50,7 @@ export const remove = async (request: Request<never>, response: Response): Promi
     }
 
     logger.info(`Comment removed with ID: ${request.params.id} by user with ID: ${request.user.id}`);
-    response.send(makeResponse(true, "Comment deleted", {}));
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment deleted", {}));
 };
 
 /**

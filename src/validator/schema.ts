@@ -6,9 +6,11 @@ import {
     IsDateString,
     IsEmail,
     IsNumber,
+    IsNumberString,
     IsOptional,
     IsString,
     Length,
+    Min,
     MinLength,
 } from "class-validator";
 
@@ -107,6 +109,11 @@ export class UpdateCommentBody {
     @IsOptional()
     @IsNumber()
     tagTo?: number;
+}
+
+export class ParamId {
+    @IsNumberString()
+    id: number;
 }
 
 /**

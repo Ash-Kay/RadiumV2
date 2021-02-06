@@ -3,7 +3,7 @@ import { Router } from "express";
 
 import "../config/passport.config";
 import * as schema from "../validator/schema";
-import { validateRequest } from "../validator/validator";
+import { validateParams, validateRequest } from "../validator/validator";
 import * as UserController from "../controller/user.controller";
 import { verifyAuth, verifyAuthorization } from "../middleware/auth";
 
@@ -14,8 +14,8 @@ router.post("/signup", validateRequest(schema.UserSignUpBody), UserController.si
 router.post("/login", validateRequest(schema.UserLoginBody), UserController.login);
 router.get("/auth/google/redirect", passport.authenticate("google", { session: false }), UserController.googleRedirect);
 router.get("/auth/google", UserController.loginWithGoogle);
-router.get("/:id", UserController.one);
+router.get("/:id", validateParams(schema.ParamId), UserController.one);
 router.patch("/", verifyAuth, validateRequest(schema.UserUpdateBody), UserController.update);
-router.get("/:id/posts", UserController.posts);
+router.get("/:id/posts", validateParams(schema.ParamId), UserController.posts);
 
 export default router;
