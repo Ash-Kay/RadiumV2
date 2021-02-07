@@ -7,7 +7,6 @@ export interface EnvConfig {
     baseURl: string;
     jwtKey: string;
     uploadPath: string;
-    ffPath: string;
     google: Google;
     aws: Aws;
 }

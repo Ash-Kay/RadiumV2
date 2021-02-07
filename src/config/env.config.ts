@@ -20,8 +20,6 @@ const configObject: EnvConfig = {
 
     uploadPath: process.env.UPLOAD_PATH || "",
 
-    ffPath: process.env.FF_PATH || "",
-
     google: {
         clientId: process.env.GOOGLE_CLIENT_ID || "",
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
