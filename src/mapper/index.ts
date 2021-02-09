@@ -132,5 +132,6 @@ export const mapCreatCommentResponseToEntity = (
         tagTo: {
             id: body.tagTo,
         },
+        mime: file?.mimetype,
     };
 };
