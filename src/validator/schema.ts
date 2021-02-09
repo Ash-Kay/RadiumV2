@@ -2,7 +2,7 @@ import {
     ArrayMaxSize,
     ArrayUnique,
     IsArray,
-    IsBoolean,
+    IsBooleanString,
     IsDateString,
     IsEmail,
     IsNumber,
@@ -10,7 +10,7 @@ import {
     IsOptional,
     IsString,
     Length,
-    Min,
+    MaxLength,
     MinLength,
 } from "class-validator";
 
@@ -79,7 +79,7 @@ export class CreatePostBody {
     title?: string;
 
     @IsOptional()
-    @IsBoolean()
+    @IsBooleanString()
     sensitive?: boolean;
 
     @IsOptional()
@@ -93,7 +93,8 @@ export class CreatePostBody {
 
 export class CreateCommentBody {
     @IsString()
-    @MinLength(5)
+    @MinLength(1)
+    @MaxLength(1000)
     message: string;
 
     @IsOptional()
@@ -103,7 +104,8 @@ export class CreateCommentBody {
 
 export class UpdateCommentBody {
     @IsString()
-    @MinLength(5)
+    @MinLength(1)
+    @MaxLength(1000)
     message: string;
 
     @IsOptional()
