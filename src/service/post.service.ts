@@ -216,7 +216,7 @@ export class PostService {
             .createQueryBuilder("comment")
             .innerJoin("comment.user", "user")
             .addSelect(["user.id", "user.username", "user.avatarUrl"])
-            .where({ post: { id }, isDeleted: null })
+            .where({ post: { id }, deletedAt: null })
             .getMany();
     }
 
