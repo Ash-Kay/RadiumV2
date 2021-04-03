@@ -48,4 +48,18 @@ export class TagService {
     linkPost(tag: Tag, post: DeepPartial<Post>): void {
         this.tagRepository.createQueryBuilder().relation(Tag, "posts").of(tag).add(post);
     }
+
+    /**
+     * Get all tags on a post
+     * @param postId of post
+     * @returns Tag[]
+     */
+    getTags(postId: number): Promise<Tag[]> {
+        return this.tagRepository.query(
+            `SELECT tags.* FROM tags
+             LEFT JOIN post_tag ON tags.id = post_tag.tagsId
+             WHERE postsId = ?;`,
+            [postId]
+        );
+    }
 }

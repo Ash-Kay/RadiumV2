@@ -350,3 +350,13 @@ export const allComments = async (request: Request<never>, response: Response): 
         response.status(HttpStatusCode.OK).send(makeResponse(true, "all comments of post fetched successfully", comms));
     }
 };
+
+/**
+ *  All tags on a post
+ * */
+export const allTags = async (request: Request<never>, response: Response): Promise<void> => {
+    const tagService = new TagService();
+    const tags = await tagService.getTags(+request.params.id);
+    logger.info(`All tags on postID: ${request.params.id}`);
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "all tags of post fetched successfully", tags));
+};

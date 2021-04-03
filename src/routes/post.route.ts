@@ -96,5 +96,6 @@ router.post(
     PostController.comment
 );
 router.get("/:id/comment", verifyOptionalAuth, PostController.allComments);
+router.get("/:id/tags", validateParams(schema.ParamId), PostController.allTags);
 
 export default router;
