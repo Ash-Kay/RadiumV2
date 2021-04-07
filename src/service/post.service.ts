@@ -108,7 +108,7 @@ export class PostService {
             ) AS voteSum
                 FROM posts op
                 INNER JOIN users ON users.id = op.userId
-                WHERE op.id = ?;`,
+                WHERE op.id = ? AND op.deletedAt IS NULL;`,
             [postId]
         );
     }
@@ -133,7 +133,7 @@ export class PostService {
             ) AS voteSum
                 FROM posts op
                 INNER JOIN users ON users.id = op.userId
-                WHERE op.id = ?;`,
+                WHERE op.id = ? AND op.deletedAt IS NULL;`,
             [userId, postId]
         );
     }
