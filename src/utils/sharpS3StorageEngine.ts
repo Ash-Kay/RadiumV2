@@ -33,14 +33,14 @@ class SharpS3StorageEngine implements StorageEngine {
                 }
                 params.Key = Key;
 
-                if (mimetype.startsWith("image")) {
+                if (mimetype.startsWith("image") && !mimetype.endsWith("gif")) {
                     this._uploadProcess(params, file, cb);
                 } else {
                     this._uploadNonImage(params, file, cb);
                 }
             });
         } else {
-            if (mimetype.startsWith("image")) {
+            if (mimetype.startsWith("image") && !mimetype.endsWith("gif")) {
                 this._uploadProcess(params, file, cb);
             } else {
                 this._uploadNonImage(params, file, cb);
