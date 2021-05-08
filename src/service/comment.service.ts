@@ -93,7 +93,7 @@ export class CommentService {
     getVoteSum(id: number): Promise<any> {
         return this.voteRepository
             .createQueryBuilder("vote")
-            .select("SUM(vote.vote)", "sum")
+            .select("SUM(vote.vote)", "voteSum")
             .where("vote.comment.id = :id", { id })
             .getRawOne();
     }

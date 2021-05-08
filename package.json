@@ -1,6 +1,6 @@
 {
     "name": "radium",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "Radium in TS and TypeORM.",
     "devDependencies": {
         "@types/body-parser": "^1.19.0",

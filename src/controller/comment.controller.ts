@@ -142,9 +142,10 @@ export const upvote = async (request: Request<never>, response: Response): Promi
         }
         return;
     }
+    const { voteSum } = await commentService.getVoteSum(+request.params.id);
 
     logger.info(`User with ID: ${request.user.id} UPVOTED comment with ID: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment Upvoted", upvote));
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment Upvoted", { ...upvote, voteSum }));
 };
 
 /**
@@ -154,9 +155,10 @@ export const removeVote = async (request: Request<never>, response: Response): P
     const commentService = new CommentService();
 
     await commentService.removeVote({ user: { id: request.user.id }, comment: { id: +request.params.id } });
+    const { voteSum } = await commentService.getVoteSum(+request.params.id);
 
     logger.info(`${request.user.id} REMOVE VOTE comment: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment vote Removed", {}));
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment vote Removed", { voteSum }));
 };
 
 /**
@@ -195,9 +197,10 @@ export const downvote = async (request: Request<never>, response: Response): Pro
         }
         return;
     }
+    const { voteSum } = await commentService.getVoteSum(+request.params.id);
 
     logger.info(`User with ID: ${request.user.id} DOWNVOTED comment with ID: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment Downvoted", downvote));
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Comment Downvoted", { ...downvote, voteSum }));
 };
 
 /**

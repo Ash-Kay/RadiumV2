@@ -187,7 +187,7 @@ export class PostService {
     getVoteSum(id: number): Promise<any> {
         return this.voteRepository
             .createQueryBuilder("vote")
-            .select("SUM(vote.vote)", "sum")
+            .select("SUM(vote.vote)", "voteSum")
             .where("vote.post.id = :id", { id })
             .getRawOne();
     }

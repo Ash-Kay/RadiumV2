@@ -56,7 +56,12 @@ export const create = async (request: Request<CreatePostBody>, response: Respons
     });
 
     logger.info(`User with ID: ${post.user.id} CREATED post with ID: ${post.id}`, post);
-    response.status(HttpStatusCode.CREATED).send(makeResponse(true, "Post Created Sucessfully", post));
+    response.status(HttpStatusCode.CREATED).send(
+        makeResponse(true, "Post Created Sucessfully", {
+            ...post,
+            user: { ...post.user, avatarUrl: request.user.avatarUrl, username: request.user.username },
+        })
+    );
 };
 
 /**
@@ -245,9 +250,10 @@ export const upvote = async (request: Request<never>, response: Response): Promi
         }
         return;
     }
+    const { voteSum } = await postService.getVoteSum(+request.params.id);
 
     logger.info(`User with ID: ${request.user.id} UPVOTED post with ID: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Upvoted", upvote));
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Upvoted", { ...upvote, voteSum }));
 };
 
 /**
@@ -257,9 +263,10 @@ export const removeVote = async (request: Request<never>, response: Response): P
     const postService = new PostService();
 
     await postService.removeVote({ user: request.user.id, post: request.params.id });
+    const { voteSum } = await postService.getVoteSum(+request.params.id);
 
     logger.info(`${request.user.id} REMOVE VOTE post: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post vote Removed", {}));
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post vote Removed", { voteSum }));
 };
 
 /**
@@ -298,9 +305,10 @@ export const downvote = async (request: Request<never>, response: Response): Pro
         }
         return;
     }
+    const { voteSum } = await postService.getVoteSum(+request.params.id);
 
     logger.info(`User with ID: ${request.user.id} DOWNVOTED post with ID: ${request.params.id}`);
-    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Downvoted", downvote));
+    response.status(HttpStatusCode.ACCEPTED).send(makeResponse(true, "Post Downvoted", { ...downvote, voteSum }));
 };
 
 /**
