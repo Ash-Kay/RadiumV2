@@ -1,5 +1,6 @@
 import _ from "lodash";
 import TimeAgo from "javascript-time-ago";
+import config from "../config/env.config";
 import en from "javascript-time-ago/locale/en";
 
 //Entities
@@ -26,7 +27,7 @@ export const mapCreatePostResponseToEntity = (
     return {
         title: body.title,
         sensitive: body.sensitive,
-        mediaUrl: file.destination,
+        mediaUrl: getMediaUrl(file),
         mime: file.mimetype,
         user: {
             id: ruser.id,
@@ -122,7 +123,7 @@ export const mapCreatCommentResponseToEntity = (
 ): DeepPartial<Comment> => {
     return {
         message: body.message,
-        mediaUrl: file?.destination,
+        mediaUrl: getMediaUrl(file),
         user: {
             id: ruser.id,
         },
@@ -134,4 +135,11 @@ export const mapCreatCommentResponseToEntity = (
         },
         mime: file?.mimetype,
     };
+};
+
+const getMediaUrl = (file?: Express.Multer.File) => {
+    if (!file) return undefined;
+
+    if (config.env === "production") return file.destination;
+    else return `http://localhost:3000/uploads/${file.filename}`;
 };

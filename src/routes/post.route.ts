@@ -1,5 +1,5 @@
 import aws from "aws-sdk";
-import multer from "multer";
+import multer, { StorageEngine } from "multer";
 import crypto from "crypto";
 import { Router, Request } from "express";
 
@@ -20,7 +20,7 @@ aws.config.update({
 
 const s3 = new aws.S3();
 
-const storage = sharpS3Storage({
+const s3storage = sharpS3Storage({
     s3,
     Bucket: config.aws.s3BucketName,
     ACL: "public-read",
@@ -41,6 +41,30 @@ const storage = sharpS3Storage({
         }
     },
 });
+
+const localStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, config.uploadPath);
+    },
+    filename: (req, file, cb) => {
+        const re = /(?:\.([^.]+))?$/;
+        const regRes = re.exec(file.originalname);
+
+        if (regRes) {
+            const ext = regRes[1];
+            const radomFileName =
+                crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") + "." + ext;
+            cb(null, radomFileName);
+        } else {
+            cb(new Error("Invalid File/ Invalid File Extension"), "");
+        }
+    },
+});
+
+const getStorage = (): StorageEngine => {
+    if (config.env === "production") return s3storage;
+    else return localStorage;
+};
 
 // file size 5MB= 1024*1024*5 = 5242880
 const limits = {
@@ -70,7 +94,7 @@ const fileFilter = (
     }
 };
 
-const upload = multer({ storage, limits, fileFilter });
+const upload = multer({ storage: getStorage(), limits, fileFilter });
 
 router.post("/", verifyAuth, upload.single("file"), validateRequest(schema.CreatePostBody), PostController.create);
 router.get("/", verifyOptionalAuth, PostController.feed);
