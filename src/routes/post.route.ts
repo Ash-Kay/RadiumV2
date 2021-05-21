@@ -26,14 +26,17 @@ const s3storage = sharpS3Storage({
     ACL: "public-read",
     Key: (request: Request, file: Express.Multer.File, cb: (error?: Error, fielName?: string) => void) => {
         if (file.mimetype.startsWith("image")) {
-            return cb(undefined, crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") + ".webp");
+            return cb(
+                undefined,
+                "posts/" + crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") + ".webp"
+            );
         } else {
             const re = /(?:\.([^.]+))?$/;
             const regRes = re.exec(file.originalname);
             if (regRes) {
                 const ext = regRes[1];
                 const radomFileName =
-                    crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") + "." + ext;
+                    "posts/" + crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") + "." + ext;
                 cb(undefined, radomFileName);
             } else {
                 cb(new Error("Invalid File/ Invalid File Extension"));
