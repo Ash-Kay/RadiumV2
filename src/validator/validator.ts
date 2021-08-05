@@ -1,6 +1,7 @@
 import { plainToClass } from "class-transformer";
 import { validateOrReject } from "class-validator";
 import { Request, Response, NextFunction } from "express";
+import HttpStatusCode from "../utils/httpStatusCode";
 
 export const validateRequest = (bodyClass: any) => {
     return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
@@ -11,7 +12,7 @@ export const validateRequest = (bodyClass: any) => {
             request.body = result;
             next();
         } catch (error) {
-            response.status(400).send(error);
+            response.status(HttpStatusCode.BAD_REQUEST).send({ validationError: true, error });
             return;
         }
     };
@@ -26,7 +27,7 @@ export const validateParams = (paramsClass: any) => {
             request.params = params;
             next();
         } catch (error) {
-            response.status(400).send(error);
+            response.status(HttpStatusCode.BAD_REQUEST).send({ validationError: true, error });
             return;
         }
     };

@@ -1,7 +1,7 @@
 import _ from "lodash";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { Response } from "express";
+import { CookieOptions, Response } from "express";
 import { Profile } from "passport";
 import { OAuth2Client } from "google-auth-library";
 
@@ -18,6 +18,7 @@ import { UserService } from "../service/user.service";
 
 //Entities
 import { User } from "../entity/user.entity";
+import { Role } from "../interface/db.enum";
 
 /**
  *  Get all users
@@ -89,7 +90,13 @@ export const login = async (request: Request<UserLoginBody>, response: Response)
     }
 
     logger.info(`${request.body.email}' LOGGED in`);
-    response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", { token }));
+    addCookieToResponse(response, token);
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", {}));
+};
+
+export const logOut = async (request: Request<never>, response: Response): Promise<void> => {
+    addCookieToResponse(response, "loggedout", { maxAge: 0 });
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Logout Successful", {}));
 };
 
 /**
@@ -137,7 +144,8 @@ export const loginWithGoogle = async (request: AuthHeaderRequest<never>, respons
         });
 
         logger.info(`${user.email}' LOGGED in`);
-        response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", { token }));
+        addCookieToResponse(response, token);
+        response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", {}));
     } else {
         logger.error(`Google Login Payload UNDEFINED!`);
         response.status(HttpStatusCode.UNAUTHORIZED).send(makeResponse(false, "Login Failed", {}));
@@ -190,6 +198,7 @@ export const googleAuthWeb = async (profile: Profile): Promise<string | void> =>
  * */
 export const googleRedirect = async (request: Request<{ email: string }>, response: Response): Promise<void> => {
     logger.info(`${request.body.email}' LOGGED in`);
+    if (request.token) addCookieToResponse(response, request.token);
     response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", { token: request.token }));
 };
 
@@ -236,4 +245,48 @@ export const posts = async (request: Request<never>, response: Response): Promis
     }
     logger.info(`${request.params.id}'s ALL post fetched`);
     response.status(HttpStatusCode.OK).send(makeResponse(true, "Posts fetched succssfully", user.posts));
+};
+
+/**
+ *  Get user data from cookie
+ * */
+export const me = async (request: Request<never>, response: Response): Promise<void> => {
+    if (!request.user) {
+        response.send(
+            makeResponse(true, "User fetched successfully", {
+                id: 0,
+                email: "",
+                role: Role.USER,
+                username: "",
+                googleId: "",
+            })
+        );
+        return;
+    }
+
+    const userService = new UserService();
+    const user = await userService.findById(+request.user.id);
+
+    if (user === undefined) {
+        logger.info(`User not found with ID :${request.user.id}`);
+        response.status(HttpStatusCode.OK).send(makeResponse(false, "No such user found", {}, "USER NOT FOUND"));
+        return;
+    }
+
+    const filteredUser = _.pick(user, [
+        "id",
+        "email",
+        "googleId",
+        "role",
+        "username",
+        "avatarUrl",
+        "lastOnline",
+        "country",
+    ]);
+    logger.info(`User with ID: ${request.user.id} is fetched`, filteredUser);
+    response.send(makeResponse(true, "User fetched successfully", filteredUser));
+};
+
+const addCookieToResponse = (response: Response, token: string, options?: Partial<CookieOptions>) => {
+    response.cookie("memenese-token", token, { httpOnly: true, secure: true, ...options });
 };
