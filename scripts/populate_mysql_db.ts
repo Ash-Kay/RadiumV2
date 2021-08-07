@@ -7,11 +7,12 @@ import { CVote } from "../src/entity/cvote.entity";
 import { Comment } from "../src/entity/comment.entity";
 import faker from "faker";
 import kleur from "kleur";
+import ormConfig from "../src/config/ormconfig";
 
 //visible at: http://localhost:3000/test/file/img.jpg
-const filePath = "test/file/img.jpg";
+const filePath = "http://localhost:3000/test/file/img.jpg";
 
-createConnection().then(async (connection) => {
+createConnection(ormConfig).then(async (connection) => {
     try {
         //Create 20 Users
         for (let i = 1; i <= 20; i++) {

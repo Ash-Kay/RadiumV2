@@ -1,7 +1,8 @@
 import { createConnection } from "typeorm";
 import kleur from "kleur";
+import ormConfig from "../src/config/ormconfig";
 
-createConnection().then(async (connection) => {
+createConnection(ormConfig).then(async (connection) => {
     const dbName = process.argv[2];
 
     if (dbName === undefined || dbName == null || dbName == "") {
