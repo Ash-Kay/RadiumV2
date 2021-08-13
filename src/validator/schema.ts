@@ -76,6 +76,7 @@ export class UserUpdateBody {
 export class CreatePostBody {
     @IsOptional()
     @IsString()
+    @MaxLength(100)
     title?: string;
 
     @IsOptional()
@@ -93,7 +94,6 @@ export class CreatePostBody {
 
 export class CreateCommentBody {
     @IsString()
-    @MinLength(1)
     @MaxLength(1000)
     message: string;
 
