@@ -90,13 +90,11 @@ export const login = async (request: Request<UserLoginBody>, response: Response)
     }
 
     logger.info(`${request.body.email}' LOGGED in`);
-    addCookieToResponse(response, token);
-    response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", {}));
+    response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", { token }));
 };
 
 export const logOut = async (request: Request<never>, response: Response): Promise<void> => {
-    addCookieToResponse(response, "loggedout", { maxAge: 0 });
-    response.status(HttpStatusCode.OK).send(makeResponse(true, "Logout Successful", {}));
+    response.status(HttpStatusCode.INTERNAL_SERVER_ERROR).send(makeResponse(false, "Not used", {}));
 };
 
 /**
@@ -144,8 +142,7 @@ export const loginWithGoogle = async (request: AuthHeaderRequest<never>, respons
         });
 
         logger.info(`${user.email}' LOGGED in`);
-        addCookieToResponse(response, token);
-        response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", {}));
+        response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", { token }));
     } else {
         logger.error(`Google Login Payload UNDEFINED!`);
         response.status(HttpStatusCode.UNAUTHORIZED).send(makeResponse(false, "Login Failed", {}));
@@ -198,7 +195,6 @@ export const googleAuthWeb = async (profile: Profile): Promise<string | void> =>
  * */
 export const googleRedirect = async (request: Request<{ email: string }>, response: Response): Promise<void> => {
     logger.info(`${request.body.email}' LOGGED in`);
-    if (request.token) addCookieToResponse(response, request.token);
     response.status(HttpStatusCode.OK).send(makeResponse(true, "Login Successful", { token: request.token }));
 };
 
@@ -287,6 +283,6 @@ export const me = async (request: Request<never>, response: Response): Promise<v
     response.send(makeResponse(true, "User fetched successfully", filteredUser));
 };
 
-const addCookieToResponse = (response: Response, token: string, options?: Partial<CookieOptions>) => {
-    response.cookie("memenese-token", token, { httpOnly: true, secure: true, ...options });
-};
+// const addCookieToResponse = (response: Response, token: string, options?: Partial<CookieOptions>) => {
+//     response.cookie("memenese-token", token, { httpOnly: true, secure: true, ...options });
+// };
