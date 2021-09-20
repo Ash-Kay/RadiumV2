@@ -28,7 +28,7 @@ const s3storage = sharpS3Storage({
         if (file.mimetype.startsWith("image")) {
             return cb(
                 undefined,
-                "posts/" + crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") + ".webp"
+                "posts/" + crypto.createHash("MD5").update(crypto.pseudoRandomBytes(32)).digest("hex") + ".jpeg"
             );
         } else {
             const re = /(?:\.([^.]+))?$/;

@@ -59,14 +59,14 @@ class SharpS3StorageEngine implements StorageEngine {
     ) {
         const buff = await streamToBuffer(file.stream);
 
-        const compressedFile = await sharp(buff).webp({ quality: 70 }).toBuffer();
+        const compressedFile = await sharp(buff).jpeg({ quality: 70 }).toBuffer();
         params.Body = compressedFile;
 
         this.opts.s3.upload(params, (err: Error, data: ManagedUpload.SendData) => {
             if (err) {
                 cb(err, undefined);
             } else {
-                cb(undefined, { filename: data.Key, destination: data.Location, mimetype: "image/webp" });
+                cb(undefined, { filename: data.Key, destination: data.Location, mimetype: "image/jpeg" });
             }
         });
     }
