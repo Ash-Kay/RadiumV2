@@ -34,7 +34,7 @@ app.use(handle.limit);
 app.use(helmet());
 app.use(
     cors({
-        origin: "http://localhost:8000",
+        origin: ["http://localhost:8000", "https://memenese.com", "https://www.memenese.com"],
         preflightContinue: true,
         credentials: true,
     })
