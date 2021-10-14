@@ -31,12 +31,11 @@ export const verifyOptionalAuth = (
             //save (decoded)user for future use
             request.user = user;
         }
-        next();
     } catch (e) {
         logger.error("JWT token INVALID");
         logger.warn("JWT token " + request.headers.authorization?.split(" ")[1]);
-        return response.status(HttpStatusCode.UNAUTHORIZED).end();
     }
+    next();
 };
 
 /**
