@@ -1,9 +1,9 @@
 import _ from "lodash";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { CookieOptions, Response } from "express";
+import { Response } from "express";
 import { Profile } from "passport";
-import { OAuth2Client } from "google-auth-library";
+import { LoginTicket, OAuth2Client } from "google-auth-library";
 
 import logger from "../utils/logger";
 import config from "../config/env.config";
@@ -104,12 +104,13 @@ export const loginWithGoogle = async (request: AuthHeaderRequest<never>, respons
     const userService = new UserService();
     const googleToken = request.headers.authorization.split(" ")[1];
     const client = new OAuth2Client(config.google.clientId);
-    let ticket;
+    let ticket: LoginTicket;
     try {
         ticket = await client.verifyIdToken({ idToken: googleToken });
     } catch (e) {
         logger.error(`Google Token verification failed`, e);
         response.status(HttpStatusCode.UNAUTHORIZED).send(makeResponse(false, "Login Failed", {}));
+        return;
     }
     const payload = ticket.getPayload();
 
@@ -121,7 +122,8 @@ export const loginWithGoogle = async (request: AuthHeaderRequest<never>, respons
             const newUser: Partial<User> = {
                 googleId: payload.sub,
                 email: payload.email,
-                username: payload.name.replace(/ /g, "") + Math.floor(Math.random() * 1000),
+                username:
+                    (payload.name || payload.email || "USER").replace(/ /g, "") + Math.floor(Math.random() * 1000),
                 firsName: payload.given_name,
                 lastName: payload.family_name,
                 avatarUrl: payload.picture,
@@ -282,7 +284,3 @@ export const me = async (request: Request<never>, response: Response): Promise<v
     logger.info(`User with ID: ${request.user.id} is fetched`, filteredUser);
     response.send(makeResponse(true, "User fetched successfully", filteredUser));
 };
-
-// const addCookieToResponse = (response: Response, token: string, options?: Partial<CookieOptions>) => {
-//     response.cookie("memenese-token", token, { httpOnly: true, secure: true, ...options });
-// };
