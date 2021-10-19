@@ -123,7 +123,10 @@ export const loginWithGoogle = async (request: AuthHeaderRequest<never>, respons
                 googleId: payload.sub,
                 email: payload.email,
                 username:
-                    (payload.name || payload.email || "USER").replace(/ /g, "") + Math.floor(Math.random() * 1000),
+                    (payload.name || payload.email?.substring(0, payload.email.indexOf("@")) || "USER").replace(
+                        / /g,
+                        ""
+                    ) + Math.floor(Math.random() * 1000),
                 firsName: payload.given_name,
                 lastName: payload.family_name,
                 avatarUrl: payload.picture,
