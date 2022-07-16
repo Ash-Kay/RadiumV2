@@ -1,4 +1,4 @@
-# Project Radium
+Memenese
 
 This is a **Backend API** of a social networking platform in Node.js
 
